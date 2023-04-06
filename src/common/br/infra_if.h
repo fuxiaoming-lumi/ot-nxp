@@ -33,7 +33,14 @@
 
 #include "lwip/netif.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void InfraIfInit(otInstance *aInstance, struct netif *netif);
 void InfraIfDeInit();
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* __OT_INFRA_IF_H__ */
