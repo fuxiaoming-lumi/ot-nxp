@@ -40,6 +40,8 @@ list(APPEND OT_PLATFORM_DEFINES
     "HAL_RPMSG_SELECT_ROLE=0"
     "TM_ENABLE_TIME_STAMP=1"
     "FSL_OSA_TASK_ENABLE=1"
+#    "FSL_OSA_MAIN_FUNC_ENABLE=1"
+#    "FSL_OSA_BM_TIMER_CONFIG=FSL_OSA_BM_TIMER_SYSTICK"
     "gAspCapability_d=1"
     "gNvStorageIncluded_d=1"
     "gUnmirroredFeatureSet_d=1"
