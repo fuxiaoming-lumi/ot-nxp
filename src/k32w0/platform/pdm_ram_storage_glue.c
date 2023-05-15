@@ -55,6 +55,7 @@
 #endif
 
 #define MAX_QUEUE_SIZE (16)
+#define PDM_PAGE_SIZE (4096 - 256) // Page size (4096) - 256 to take into account segment header. TODO: compute reserved size for payload in a segment
 
 typedef struct
 {
@@ -91,6 +92,9 @@ extern void *otPlatRealloc(void *ptr, size_t aSize);
 static PDM_portConfig_t pdm_PortContext = {NULL, 0, NULL, 0};
 
 #if ENABLE_STORAGE_DYNAMIC_MEMORY
+
+/* Buffer used to temporary copy RAM buffer data in order to sync save it. */
+static uint8_t sPageBuffer[PDM_PAGE_SIZE];
 
 /* Alloc/Realloc staging buffer in PDM encryption context */
 static rsError stagingBufferResize(PDM_portConfig_t *pdm_PortContext, uint16_t newSize)
@@ -403,48 +407,39 @@ PDM_teStatus FS_eSaveRecordDataInIdleTask(uint16_t u16IdValue, ramBufferDescript
     return status;
 }
 
-void FS_SaveRecordData(tsQueueEntry * entry)
+/* Saving data synchronously uses a static buffer to copy
+ * PDM_PAGE_SIZE bytes from a RAM buffer. Chunks of PDM_PAGE_SIZE
+ * bytes are saved at different PDM ids, starting from the base PDM
+ * id used in the RAM buffer entry. The PDM id user (e.g. Matter) should
+ * take into account this limitation and choose the PDM ids accordingly, to
+ * avoid the possibility of overwriting data.
+ */
+static void FS_SaveRecordData(tsQueueEntry * entry)
 {
-    ramBufferDescriptor *handle          = NULL;
-    uint8_t             *buffer          = NULL;
-    uint16_t             bufferSize      = 0;
-    uint16_t             bufferAllocSize = 0;
-    bool_t               doPdmSave       = FALSE;
-    PDM_teStatus         pdmStatus       = PDM_E_STATUS_INTERNAL_ERROR;
+    ramBufferDescriptor *handle = entry->pvDataBuffer;
+    uint16_t             length = handle->header.length;
+    uint8_t               pages = (length / PDM_PAGE_SIZE) + 1;
 
-    handle = entry->pvDataBuffer;
-    if (osaStatus_Success == mutex_lock(handle->header.mutexHandle, 0))
+    for (uint8_t i = 0; i < segments; i++)
     {
-        if ((buffer == NULL) || (bufferAllocSize < handle->header.length))
+        PDM_teStatus status = PDM_E_STATUS_INTERNAL_ERROR;
+        uint16_t size = (length < PDM_PAGE_SIZE) ? length : PDM_PAGE_SIZE;
+
+        if (osaStatus_Success == mutex_lock(handle->header.mutexHandle, 0))
         {
-            bufferAllocSize = handle->header.length;
-            buffer          = (uint8_t *)otPlatRealloc(buffer, bufferAllocSize);
+            memcpy(sPageBuffer, handle->buffer + i*PDM_PAGE_SIZE, size);
+            mutex_unlock(handle->header.mutexHandle);
+
+            status = PDM_eSaveRecordData(entry->u16IdValue + i, sPageBuffer, size);
         }
 
-        if (buffer != NULL)
+        if (status != PDM_E_STATUS_OK)
         {
-            memcpy(buffer, handle->buffer, handle->header.length);
-            bufferSize = handle->header.length;
-            doPdmSave  = TRUE;
+            FS_eSaveRecordDataInIdleTask(entry->u16IdValue, handle);
+            break;
         }
 
-        mutex_unlock(handle->header.mutexHandle);
-    }
-
-    if (doPdmSave == TRUE)
-    {
-        pdmStatus = PDM_eSaveRecordData(entry->u16IdValue, buffer, bufferSize);
-        doPdmSave = FALSE;
-    }
-
-    if (pdmStatus != PDM_E_STATUS_OK)
-    {
-        FS_eSaveRecordDataInIdleTask(entry->u16IdValue, handle);
-    }
-
-    if (buffer != NULL)
-    {
-        otPlatFree(buffer);
+        length -= size;
     }
 }
 
