@@ -61,7 +61,7 @@ rsError ramStorageResize(ramBufferDescriptor *pBuffer, uint16_t aKey, const uint
  * Main use case is for dynamic memory allocation
  * In case static memory allocation is used, initialSize is unused
  */
-ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize);
+ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize, bool_t extendedSearch);
 
 #if PDM_SAVE_IDLE
 PDM_teStatus FS_eSaveRecordDataInIdleTask(uint16_t u16IdValue, ramBufferDescriptor *pvDataBuffer);

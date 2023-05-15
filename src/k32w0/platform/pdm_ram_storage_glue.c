@@ -179,9 +179,11 @@ static void HandleError(ramBufferDescriptor **buffer)
 /* Iterate through all PDM ids (if any), starting from the base
  * PDM id passed as input and compute the maximum length a RAM
  * buffer must have to be able to store all data from these ids.
+ * If extendedSearch is FALSE, the search stops after first id.
+ *
  * Returns the number of sequential PDM ids.
  */
-static uint16_t doesDataExist(uint16_t id, ramBufferDescriptor * handle)
+static uint16_t doesDataExist(uint16_t id, ramBufferDescriptor * handle, bool_t extendedSearch)
 {
     uint16_t counter = 0;
     uint16_t length;
@@ -190,6 +192,11 @@ static uint16_t doesDataExist(uint16_t id, ramBufferDescriptor * handle)
     {
         handle->header.length += length;
         counter++;
+
+        if (extendedSearch == FALSE)
+        {
+            break;
+        }
     }
 
     while (handle->header.length > handle->header.maxLength)
@@ -237,7 +244,10 @@ static void loadData(uint16_t id, uint16_t nbIds, ramBufferDescriptor * handle)
     }
 }
 
-ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize)
+/* Set extendedSearch to TRUE to enable retrieving data from additional PDM ids, until
+ * the incremented PDM id does not exist.
+ */
+ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize, bool_t extendedSearch)
 {
     rsError              err      = RS_ERROR_NONE;
     ramBufferDescriptor *ramDescr = NULL;
@@ -252,7 +262,7 @@ ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize)
     otEXPECT_ACTION(ramDescr->header.mutexHandle != NULL, HandleError(&ramDescr));
 #endif
 
-    nbPdmIds = doesDataExist(nvmId, ramDescr);
+    nbPdmIds = doesDataExist(nvmId, ramDescr, extendedSearch);
     otEXPECT_ACTION(ramDescr->header.maxLength <= kRamBufferMaxAllocSize, HandleError(&ramDescr));
 
 #if PDM_ENCRYPTION
@@ -322,9 +332,10 @@ exit:
 }
 
 #else
-ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize)
+ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize, bool_t extendedSearch)
 {
     OT_UNUSED_VARIABLE(initialSize);
+    OT_UNUSED_VARIABLE(extendedSearch);
     rsError              err       = RS_ERROR_NONE;
     ramBufferDescriptor *ramDescr  = (ramBufferDescriptor *)&sPdmBuffer;
     uint16_t             bytesRead = 0;

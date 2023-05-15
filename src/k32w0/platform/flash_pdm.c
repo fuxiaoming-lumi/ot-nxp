@@ -100,7 +100,7 @@ void otPlatSettingsInit(otInstance *aInstance, const uint16_t *aSensitiveKeys, u
 
     otEXPECT_ACTION((PDM_E_STATUS_OK == PDM_Init()), error = OT_ERROR_NO_BUFS);
 
-    ramDescr = getRamBuffer(kNvmIdOTConfigData, kRamBufferInitialSize);
+    ramDescr = getRamBuffer(kNvmIdOTConfigData, kRamBufferInitialSize, FALSE);
     otEXPECT_ACTION(ramDescr != NULL, error = OT_ERROR_NO_BUFS);
     otEXPECT_ACTION(ramDescr->buffer != NULL, error = OT_ERROR_NO_BUFS);
 #if PDM_SAVE_IDLE
