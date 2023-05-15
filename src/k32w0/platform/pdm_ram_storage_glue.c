@@ -172,6 +172,35 @@ static void HandleError(ramBufferDescriptor **buffer)
     }
 }
 
+static bool_t doesDataExist(uint16_t id, ramBufferDescriptor * handle)
+{
+    bool_t res = FALSE;
+
+    /* Check if dataset is present and get its size */
+    if (PDM_bDoesDataExist(id, &handle->header.length))
+    {
+        res = TRUE;
+        while (handle->header.length > handle->header.maxLength)
+        {
+            // increase size until NVM data fits
+            handle->header.maxLength += kRamBufferReallocSize;
+        }
+    }
+
+    return res;
+}
+
+static void loadData(uint16_t id, ramBufferDescriptor * handle)
+{
+    PDM_teStatus status =
+        PDM_eReadDataFromRecord(id, handle->buffer, handle->header.maxLength, &handle->header.length);
+    if ((PDM_E_STATUS_OK != status) || (handle->header.length > handle->header.maxLength))
+    {
+        handle->header.length = 0;
+        PDM_vDeleteDataRecord(id);
+    }
+}
+
 ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize)
 {
     rsError              err              = RS_ERROR_NONE;
@@ -187,16 +216,7 @@ ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize)
     otEXPECT_ACTION(ramDescr->header.mutexHandle != NULL, HandleError(&ramDescr));
 #endif
 
-    /* Check if dataset is present and get its size */
-    if (PDM_bDoesDataExist(nvmId, &ramDescr->header.length))
-    {
-        bLoadDataFromNvm = TRUE;
-        while (ramDescr->header.length > ramDescr->header.maxLength)
-        {
-            // increase size until NVM data fits
-            ramDescr->header.maxLength += kRamBufferReallocSize;
-        }
-    }
+    bLoadDataFromNvm = doesDataExist(nvmId, ramDescr);
     otEXPECT_ACTION(ramDescr->header.maxLength <= kRamBufferMaxAllocSize, HandleError(&ramDescr));
 
 #if PDM_ENCRYPTION
@@ -219,13 +239,7 @@ ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize)
 
     if (bLoadDataFromNvm)
     {
-        PDM_teStatus status =
-            PDM_eReadDataFromRecord(nvmId, ramDescr->buffer, ramDescr->header.maxLength, &ramDescr->header.length);
-        if ((PDM_E_STATUS_OK != status) || (ramDescr->header.length > ramDescr->header.maxLength))
-        {
-            ramDescr->header.length = 0;
-            PDM_vDeleteDataRecord(nvmId);
-        }
+        loadData(nvmId, ramDescr);
     }
 
 exit:
@@ -296,13 +310,7 @@ ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize)
 
     if (PDM_bDoesDataExist(nvmId, &ramDescr->header.length))
     {
-        PDM_teStatus status =
-            PDM_eReadDataFromRecord(nvmId, ramDescr->buffer, ramDescr->header.maxLength, &ramDescr->header.length);
-        if ((PDM_E_STATUS_OK != status) || (ramDescr->header.length > ramDescr->header.maxLength))
-        {
-            ramDescr->header.length = 0;
-            PDM_vDeleteDataRecord(nvmId);
-        }
+        loadData(nvmId, ramDescr);
     }
 
 exit:
