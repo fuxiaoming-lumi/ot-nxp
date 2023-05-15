@@ -176,40 +176,72 @@ static void HandleError(ramBufferDescriptor **buffer)
     }
 }
 
-static bool_t doesDataExist(uint16_t id, ramBufferDescriptor * handle)
+/* Iterate through all PDM ids (if any), starting from the base
+ * PDM id passed as input and compute the maximum length a RAM
+ * buffer must have to be able to store all data from these ids.
+ * Returns the number of sequential PDM ids.
+ */
+static uint16_t doesDataExist(uint16_t id, ramBufferDescriptor * handle)
 {
-    bool_t res = FALSE;
+    uint16_t counter = 0;
+    uint16_t length;
 
-    /* Check if dataset is present and get its size */
-    if (PDM_bDoesDataExist(id, &handle->header.length))
+    while (PDM_bDoesDataExist(id + counter, &length))
     {
-        res = TRUE;
-        while (handle->header.length > handle->header.maxLength)
+        handle->header.length += length;
+        counter++;
+    }
+
+    while (handle->header.length > handle->header.maxLength)
+    {
+        // increase size until NVM data fits
+        handle->header.maxLength += kRamBufferReallocSize;
+    }
+
+    return counter;
+}
+
+/* Iterate through all PDM ids, starting from the base PDM id
+ * passed as input and load data sequentially in the RAM buffer
+ * found in handle. Prior doesDataExist call is expected in order
+ * to have a correct maxLength value.
+ */
+static void loadData(uint16_t id, uint16_t nbIds, ramBufferDescriptor * handle)
+{
+    PDM_teStatus status = PDM_E_STATUS_OK;
+    uint16_t length;
+
+    handle->header.length = 0;
+
+    for (uint16_t i = id; i < id + nbIds; i++)
+    {
+        status =
+            PDM_eReadDataFromRecord(i, handle->buffer + handle->header.length, handle->header.maxLength, &length);
+        if (PDM_E_STATUS_OK == status)
         {
-            // increase size until NVM data fits
-            handle->header.maxLength += kRamBufferReallocSize;
+            handle->header.length += length;
+        }
+        else
+        {
+            break;
         }
     }
 
-    return res;
-}
-
-static void loadData(uint16_t id, ramBufferDescriptor * handle)
-{
-    PDM_teStatus status =
-        PDM_eReadDataFromRecord(id, handle->buffer, handle->header.maxLength, &handle->header.length);
     if ((PDM_E_STATUS_OK != status) || (handle->header.length > handle->header.maxLength))
     {
         handle->header.length = 0;
-        PDM_vDeleteDataRecord(id);
+        for (uint16_t i = id; i < id + nbIds; i++)
+        {
+            PDM_vDeleteDataRecord(i);
+        }
     }
 }
 
 ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize)
 {
-    rsError              err              = RS_ERROR_NONE;
-    ramBufferDescriptor *ramDescr         = NULL;
-    bool_t               bLoadDataFromNvm = FALSE;
+    rsError              err      = RS_ERROR_NONE;
+    ramBufferDescriptor *ramDescr = NULL;
+    uint16_t             nbPdmIds = 0;
 
     ramDescr = (ramBufferDescriptor *)otPlatCAlloc(1, kRamDescSize);
     otEXPECT_ACTION(ramDescr != NULL, HandleError(&ramDescr));
@@ -220,7 +252,7 @@ ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize)
     otEXPECT_ACTION(ramDescr->header.mutexHandle != NULL, HandleError(&ramDescr));
 #endif
 
-    bLoadDataFromNvm = doesDataExist(nvmId, ramDescr);
+    nbPdmIds = doesDataExist(nvmId, ramDescr);
     otEXPECT_ACTION(ramDescr->header.maxLength <= kRamBufferMaxAllocSize, HandleError(&ramDescr));
 
 #if PDM_ENCRYPTION
@@ -241,9 +273,9 @@ ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize)
     ramDescr->buffer = (uint8_t *)otPlatCAlloc(1, ramDescr->header.maxLength);
     otEXPECT_ACTION(ramDescr->buffer != NULL, HandleError(&ramDescr));
 
-    if (bLoadDataFromNvm)
+    if (nbPdmIds > 0)
     {
-        loadData(nvmId, ramDescr);
+        loadData(nvmId, nbPdmIds, ramDescr);
     }
 
 exit:
@@ -314,7 +346,7 @@ ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize)
 
     if (PDM_bDoesDataExist(nvmId, &ramDescr->header.length))
     {
-        loadData(nvmId, ramDescr);
+        loadData(nvmId, 1, ramDescr);
     }
 
 exit:
