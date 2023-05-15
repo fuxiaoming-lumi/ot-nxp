@@ -83,7 +83,7 @@ struct settingsBlock
  * initial RAM buffer size gets insufficient
  */
 #define kRamBufferReallocSize 512
-#define kRamBufferMaxAllocSize 10240
+#define kRamBufferMaxAllocSize 12288
 
 #define kRamDescSize sizeof(ramBufferDescriptor)
 
