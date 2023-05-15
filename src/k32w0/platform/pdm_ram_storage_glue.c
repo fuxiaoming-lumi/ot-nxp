@@ -395,15 +395,54 @@ PDM_teStatus FS_eSaveRecordDataInIdleTask(uint16_t u16IdValue, ramBufferDescript
     return status;
 }
 
-void FS_vIdleTask(uint8_t u8WritesAllowed)
+void FS_SaveRecordData(tsQueueEntry * entry)
 {
-    tsQueueEntry         currentEntry;
-    ramBufferDescriptor *ramBuffer       = NULL;
+    ramBufferDescriptor *handle          = NULL;
     uint8_t             *buffer          = NULL;
     uint16_t             bufferSize      = 0;
     uint16_t             bufferAllocSize = 0;
     bool_t               doPdmSave       = FALSE;
     PDM_teStatus         pdmStatus       = PDM_E_STATUS_INTERNAL_ERROR;
+
+    handle = entry->pvDataBuffer;
+    if (osaStatus_Success == mutex_lock(handle->header.mutexHandle, 0))
+    {
+        if ((buffer == NULL) || (bufferAllocSize < handle->header.length))
+        {
+            bufferAllocSize = handle->header.length;
+            buffer          = (uint8_t *)otPlatRealloc(buffer, bufferAllocSize);
+        }
+
+        if (buffer != NULL)
+        {
+            memcpy(buffer, handle->buffer, handle->header.length);
+            bufferSize = handle->header.length;
+            doPdmSave  = TRUE;
+        }
+
+        mutex_unlock(handle->header.mutexHandle);
+    }
+
+    if (doPdmSave == TRUE)
+    {
+        pdmStatus = PDM_eSaveRecordData(entry->u16IdValue, buffer, bufferSize);
+        doPdmSave = FALSE;
+    }
+
+    if (pdmStatus != PDM_E_STATUS_OK)
+    {
+        FS_eSaveRecordDataInIdleTask(entry->u16IdValue, handle);
+    }
+
+    if (buffer != NULL)
+    {
+        otPlatFree(buffer);
+    }
+}
+
+void FS_vIdleTask(uint8_t u8WritesAllowed)
+{
+    tsQueueEntry currentEntry;
 
     if (u8WritesAllowed > MAX_QUEUE_SIZE)
         u8WritesAllowed = MAX_QUEUE_SIZE;
@@ -417,43 +456,9 @@ void FS_vIdleTask(uint8_t u8WritesAllowed)
         asQueueMutexTaken = FALSE;
         mutex_unlock(asQueueMutex);
 
-        ramBuffer = currentEntry.pvDataBuffer;
-        if (osaStatus_Success == mutex_lock(ramBuffer->header.mutexHandle, 0))
-        {
-            if ((buffer == NULL) || (bufferAllocSize < ramBuffer->header.length))
-            {
-                bufferAllocSize = ramBuffer->header.length;
-                buffer          = (uint8_t *)otPlatRealloc(buffer, bufferAllocSize);
-            }
-
-            if (buffer != NULL)
-            {
-                memcpy(buffer, ramBuffer->buffer, ramBuffer->header.length);
-                bufferSize = ramBuffer->header.length;
-                doPdmSave  = TRUE;
-            }
-
-            mutex_unlock(ramBuffer->header.mutexHandle);
-        }
-
-        if (doPdmSave == TRUE)
-        {
-            pdmStatus = PDM_eSaveRecordData(currentEntry.u16IdValue, buffer, bufferSize);
-            doPdmSave = FALSE;
-        }
-
-        if (pdmStatus != PDM_E_STATUS_OK)
-        {
-            FS_eSaveRecordDataInIdleTask(currentEntry.u16IdValue, ramBuffer);
-        }
+        FS_SaveRecordData(&currentEntry);
 
         u8WritesAllowed--;
-        pdmStatus = PDM_E_STATUS_INTERNAL_ERROR;
-    }
-
-    if (buffer != NULL)
-    {
-        otPlatFree(buffer);
     }
 }
 
