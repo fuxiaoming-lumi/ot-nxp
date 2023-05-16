@@ -185,7 +185,7 @@ static void HandleError(ramBufferDescriptor **buffer)
  *
  * Returns the number of sequential PDM ids.
  */
-static uint16_t doesDataExist(uint16_t id, ramBufferDescriptor * handle, bool_t extendedSearch)
+static uint16_t doesDataExist(uint16_t id, ramBufferDescriptor *handle, bool_t extendedSearch)
 {
     uint16_t counter = 0;
     uint16_t length;
@@ -215,17 +215,16 @@ static uint16_t doesDataExist(uint16_t id, ramBufferDescriptor * handle, bool_t 
  * found in handle. Prior doesDataExist call is expected in order
  * to have a correct maxLength value.
  */
-static void loadData(uint16_t id, uint16_t nbIds, ramBufferDescriptor * handle)
+static void loadData(uint16_t id, uint16_t nbIds, ramBufferDescriptor *handle)
 {
     PDM_teStatus status = PDM_E_STATUS_OK;
-    uint16_t length;
+    uint16_t     length;
 
     handle->header.length = 0;
 
     for (uint16_t i = id; i < id + nbIds; i++)
     {
-        status =
-            PDM_eReadDataFromRecord(i, handle->buffer + handle->header.length, handle->header.maxLength, &length);
+        status = PDM_eReadDataFromRecord(i, handle->buffer + handle->header.length, handle->header.maxLength, &length);
         if (PDM_E_STATUS_OK == status)
         {
             handle->header.length += length;
@@ -459,20 +458,20 @@ PDM_teStatus FS_eSaveRecordDataInIdleTask(uint16_t u16IdValue, ramBufferDescript
  * take into account this limitation and choose the PDM ids accordingly, to
  * avoid the possibility of overwriting data.
  */
-static void FS_SaveRecordData(tsQueueEntry * entry)
+static void FS_SaveRecordData(tsQueueEntry *entry)
 {
-    ramBufferDescriptor *handle = entry->pvDataBuffer;
-    uint16_t             length = handle->header.length;
-    uint8_t            segments = (length / PDM_SEGMENT_SIZE) + 1;
+    ramBufferDescriptor *handle   = entry->pvDataBuffer;
+    uint16_t             length   = handle->header.length;
+    uint8_t              segments = (length / PDM_SEGMENT_SIZE) + 1;
 
     for (uint8_t i = 0; i < segments; i++)
     {
         PDM_teStatus status = PDM_E_STATUS_INTERNAL_ERROR;
-        uint16_t size = (length < PDM_SEGMENT_SIZE) ? length : PDM_SEGMENT_SIZE;
+        uint16_t     size   = (length < PDM_SEGMENT_SIZE) ? length : PDM_SEGMENT_SIZE;
 
         if (osaStatus_Success == mutex_lock(handle->header.mutexHandle, 0))
         {
-            memcpy(sSegmentBuffer, handle->buffer + i*PDM_SEGMENT_SIZE, size);
+            memcpy(sSegmentBuffer, handle->buffer + i * PDM_SEGMENT_SIZE, size);
             mutex_unlock(handle->header.mutexHandle);
 
             status = PDM_eSaveRecordData(entry->u16IdValue + i, sSegmentBuffer, size);
