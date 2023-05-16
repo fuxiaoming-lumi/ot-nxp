@@ -167,6 +167,41 @@ exit:
 
 #endif /* PDM_ENCRYPTION */
 
+/* Iterate through all PDM ids, starting from the base PDM id
+ * passed as input and load data sequentially in the RAM buffer
+ * found in handle. Prior doesDataExist call is expected in order
+ * to have a correct maxLength value.
+ */
+static void loadData(uint16_t id, uint16_t nbIds, ramBufferDescriptor *handle)
+{
+    PDM_teStatus status = PDM_E_STATUS_OK;
+    uint16_t     length;
+
+    handle->header.length = 0;
+
+    for (uint16_t i = id; i < id + nbIds; i++)
+    {
+        status = PDM_eReadDataFromRecord(i, handle->buffer + handle->header.length, handle->header.maxLength, &length);
+        if (PDM_E_STATUS_OK == status)
+        {
+            handle->header.length += length;
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    if ((PDM_E_STATUS_OK != status) || (handle->header.length > handle->header.maxLength))
+    {
+        handle->header.length = 0;
+        for (uint16_t i = id; i < id + nbIds; i++)
+        {
+            PDM_vDeleteDataRecord(i);
+        }
+    }
+}
+
 #if ENABLE_STORAGE_DYNAMIC_MEMORY
 
 static void HandleError(ramBufferDescriptor **buffer)
@@ -208,41 +243,6 @@ static uint16_t doesDataExist(uint16_t id, ramBufferDescriptor *handle, bool_t e
     }
 
     return counter;
-}
-
-/* Iterate through all PDM ids, starting from the base PDM id
- * passed as input and load data sequentially in the RAM buffer
- * found in handle. Prior doesDataExist call is expected in order
- * to have a correct maxLength value.
- */
-static void loadData(uint16_t id, uint16_t nbIds, ramBufferDescriptor *handle)
-{
-    PDM_teStatus status = PDM_E_STATUS_OK;
-    uint16_t     length;
-
-    handle->header.length = 0;
-
-    for (uint16_t i = id; i < id + nbIds; i++)
-    {
-        status = PDM_eReadDataFromRecord(i, handle->buffer + handle->header.length, handle->header.maxLength, &length);
-        if (PDM_E_STATUS_OK == status)
-        {
-            handle->header.length += length;
-        }
-        else
-        {
-            break;
-        }
-    }
-
-    if ((PDM_E_STATUS_OK != status) || (handle->header.length > handle->header.maxLength))
-    {
-        handle->header.length = 0;
-        for (uint16_t i = id; i < id + nbIds; i++)
-        {
-            PDM_vDeleteDataRecord(i);
-        }
-    }
 }
 
 /* Set extendedSearch to TRUE to enable retrieving data from additional PDM ids, until
