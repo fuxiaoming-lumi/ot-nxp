@@ -469,6 +469,8 @@ static void FS_SaveRecordData(tsQueueEntry *entry)
         PDM_teStatus status = PDM_E_STATUS_INTERNAL_ERROR;
         uint16_t     size   = (length < PDM_SEGMENT_SIZE) ? length : PDM_SEGMENT_SIZE;
 
+        // There might be a corner case in which a key spans across two segments
+        // that might lead to incompatible or corrupted data for that key.
         if (osaStatus_Success == mutex_lock(handle->header.mutexHandle, 0))
         {
             memcpy(sSegmentBuffer, handle->buffer + i * PDM_SEGMENT_SIZE, size);
