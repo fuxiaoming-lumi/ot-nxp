@@ -52,9 +52,9 @@ if ("${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0")
         SPINEL_ENABLE_RX_RTS=1
         SPINEL_ENABLE_TX_RTS=1
         #OTW configurations
-        OTW_RESET_PIN_PORT=6
-        OTW_RESET_PIN_NUM=2
-        OTW_DIO5_PIN_PORT=6
+        OTW_RESET_PIN_PORT=1
+        OTW_RESET_PIN_NUM=27
+        OTW_DIO5_PIN_PORT=1
         OTW_DIO5_PIN_NUM=26
     )
 endif()
