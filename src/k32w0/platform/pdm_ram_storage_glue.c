@@ -55,9 +55,11 @@
 #endif
 
 #define MAX_QUEUE_SIZE (16)
-// Segment data size is: D_SEGMENT_MEMORY_SIZE (4096) - D_PDM_NVM_SEGMENT_HEADER_SIZE (size of internal header).
-// Subtract 64 to have more margin.
+
+// Should be already defined in ram_storage.h
+#ifndef
 #define PDM_SEGMENT_SIZE (4096 - 64)
+#endif
 
 typedef struct
 {
