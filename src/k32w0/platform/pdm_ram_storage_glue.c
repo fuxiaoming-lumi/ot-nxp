@@ -56,10 +56,11 @@
 
 #define MAX_QUEUE_SIZE (16)
 
-// Should be already defined in ram_storage.h
-#ifndef
+/* Segment data size is: D_SEGMENT_MEMORY_SIZE (4096) - D_PDM_NVM_SEGMENT_HEADER_SIZE (size of internal header).
+ * Subtract 64 to have more margin. */
 #define PDM_SEGMENT_SIZE (4096 - 64)
-#endif
+/* Dummy keys are introduced at the end of a PDM region if the current key does not fit the free space. */
+#define kRamBufferDummyKey (uint16_t)0xFFFF
 
 typedef struct
 {
@@ -369,6 +370,33 @@ exit:
 #endif
 
 #if PDM_SAVE_IDLE
+
+/* Overwrite the weak implementation from ram_storage.c */
+rsError ramStorageEnsureBlockConsistency(ramBufferDescriptor *pBuffer, uint16_t aValueLength)
+{
+    rsError        error     = RS_ERROR_NONE;
+    const uint16_t newLength = pBuffer->header.length + sizeof(struct settingsBlock) + aValueLength;
+    if (newLength / PDM_SEGMENT_SIZE != pBuffer->header.length / PDM_SEGMENT_SIZE)
+    {
+        // This means the current block will span across two PDM id regions, which can
+        // lead to corrupted data in some corner cases. Add a dummy value and shift the
+        // current block such that it falls in the next PDM id region.
+        struct settingsBlock dummyBlock = {.key    = kRamBufferDummyKey,
+                                           .length = PDM_SEGMENT_SIZE -
+                                                     (pBuffer->header.length + sizeof(struct settingsBlock))};
+        uint8_t             *dummyData  = (uint8_t *)otPlatCAlloc(1, dummyBlock.length);
+        otEXPECT_ACTION(dummyData != NULL, error = RS_ERROR_NO_BUFS);
+
+        memcpy(&pBuffer->buffer[pBuffer->header.length], &dummyBlock, sizeof(dummyBlock));
+        memcpy(&pBuffer->buffer[pBuffer->header.length + sizeof(dummyBlock)], dummyData, dummyBlock.length);
+        pBuffer->header.length += sizeof(dummyBlock) + dummyBlock.length;
+
+        otPlatFree(dummyData);
+    }
+
+exit:
+    return error;
+}
 
 uint8_t u8IncrementQueuePtr(uint8_t u8CurrentValue)
 {
