@@ -70,6 +70,7 @@
 #define CONFIG_COMPRESS_TX_PWTBL
 // OTP options
 #undef OTP_CHANINFO
+#define WIFI_ADD_ON 1
 #endif
 
 #define CONFIG_IPV6               1

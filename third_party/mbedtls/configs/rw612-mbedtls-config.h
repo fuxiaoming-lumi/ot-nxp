@@ -37,6 +37,11 @@
 /* SDK mbetdls config include */
 #include "els_pkc_mbedtls_config.h"
 
+#ifdef CONFIG_WPA_SUPP_MBEDTLS
+/* wpa_supplicant mbedtls extend config */
+#include "wpa_supplicant_els_pkc_mbedtls_ext_config.h"
+#endif
+
 /* els_pkc_mbedtls_config.h uses the same include guard than OT mbedtls-config.h
  * so we can undef the include guard as a workaround */
 #undef MBEDTLS_CONFIG_H

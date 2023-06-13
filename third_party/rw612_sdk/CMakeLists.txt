@@ -397,6 +397,13 @@ if(OT_NXP_MBEDTLS_PORT)
     )
 endif()
 
+if(OT_NXP_BUILD_APP_AS_LIB)
+    #ethermind/coex_app_cli include
+    list(APPEND RW612_SDK_INCLUDES
+        $ENV{NXP_RW612_SDK_ROOT}/middleware/wireless/ethermind/examples/coex_app_cli/mbedtls
+    )
+endif()
+
 if (SDK_RELEASE)
     list(APPEND RW612_SDK_INCLUDES
         ${NXP_SDK_ROOT}/devices/RW612/utilities/format
@@ -446,6 +453,13 @@ if(OT_NXP_DEVICE_REVISION MATCHES "A0")
     target_compile_definitions(${NXP_DRIVER_LIB}
         PUBLIC
         -DRW610_A1=0
+    )
+endif()
+
+if(OT_NXP_ENABLE_WPA_SUPP_MBEDTLS)
+    target_compile_definitions(${NXP_DRIVER_LIB}
+        PUBLIC
+        -DCONFIG_WPA_SUPP_MBEDTLS #Enable wpa_supplicant mbedtls extend config
     )
 endif()
 
