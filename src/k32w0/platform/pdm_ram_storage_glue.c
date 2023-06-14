@@ -381,9 +381,9 @@ rsError ramStorageEnsureBlockConsistency(ramBufferDescriptor *pBuffer, uint16_t 
         // This means the current block will span across two PDM id regions, which can
         // lead to corrupted data in some corner cases. Add a dummy value and shift the
         // current block such that it falls in the next PDM id region.
-        struct settingsBlock dummyBlock = {.key    = kRamBufferDummyKey,
-                                           .length = PDM_SEGMENT_SIZE -
-                                                     (pBuffer->header.length + sizeof(struct settingsBlock))};
+        const uint16_t dummyLength =
+            PDM_SEGMENT_SIZE - ((pBuffer->header.length % PDM_SEGMENT_SIZE) + sizeof(struct settingsBlock));
+        struct settingsBlock dummyBlock = {.key = kRamBufferDummyKey, .length = dummyLength};
         uint8_t             *dummyData  = (uint8_t *)otPlatCAlloc(1, dummyBlock.length);
         otEXPECT_ACTION(dummyData != NULL, error = RS_ERROR_NO_BUFS);
 
