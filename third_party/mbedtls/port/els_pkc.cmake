@@ -42,3 +42,7 @@ list(APPEND thirdparty_inc_public
     ${MBEDTLS_PORT_PATH}/els
     ${MBEDTLS_PORT_PATH}/pkc
 )
+
+list(APPEND thirdparty_def
+    MBEDTLS_MCUX_ELS_PKC_API
+)
