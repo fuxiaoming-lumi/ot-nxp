@@ -98,16 +98,6 @@ endif ()
 set_property(SOURCE ${NXP_SDK_ROOT}/devices/MIMXRT1062/gcc/startup_MIMXRT1062.S PROPERTY LANGUAGE C)
 
 add_library(${NXP_DRIVER_LIB}
-#freertos files
-    ${RTOS_PATH}/freertos/freertos-kernel/event_groups.c
-    ${RTOS_PATH}/freertos/freertos-kernel/croutine.c
-    ${RTOS_PATH}/freertos/freertos-kernel/list.c
-    ${RTOS_PATH}/freertos/freertos-kernel/portable/GCC/ARM_CM4F/port.c
-    ${RTOS_PATH}/freertos/freertos-kernel/queue.c
-    ${RTOS_PATH}/freertos/freertos-kernel/stream_buffer.c
-    ${RTOS_PATH}/freertos/freertos-kernel/tasks.c
-    ${RTOS_PATH}/freertos/freertos-kernel/timers.c
-    ${RTOS_PATH}/freertos/freertos-kernel/portable/MemMang/heap_4.c
 #startup files
     ${NXP_SDK_ROOT}/devices/MIMXRT1062/gcc/startup_MIMXRT1062.S
     #${NXP_SDK_ROOT}/devices/MIMXRT1062/mcuxpresso/startup_mimxrt1062.c
@@ -165,9 +155,6 @@ add_library(${NXP_DRIVER_LIB}
 
 target_include_directories(${NXP_DRIVER_LIB}
     PUBLIC
-#freertos includes
-        ${RTOS_PATH}/freertos/freertos-kernel/include
-        ${RTOS_PATH}/freertos/freertos-kernel/portable/GCC/ARM_CM4F
 #CMSIS includes
         ${NXP_SDK_ROOT}/CMSIS/Core/Include
 #other SDK files
@@ -292,6 +279,7 @@ endif()
 
 target_link_libraries(${NXP_DRIVER_LIB}
     PUBLIC
+    freertos_kernel
     ${NXP_BOARD_LIB}
     #Dependency to little_fs config files
     connfwk-platform-${OT_NXP_PLATFORM_FAMILY}
