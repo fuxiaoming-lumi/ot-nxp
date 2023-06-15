@@ -128,6 +128,10 @@ else()
         )
 endif()
 
+if(NOT FREERTOS_CONFIG_FILE_DIRECTORY)
+    set(FREERTOS_CONFIG_FILE_DIRECTORY ${PROJECT_SOURCE_DIR}/boards/${OT_NXP_BOARD}/freertos CACHE STRING "")
+endif()
+
 # Give the possibility to the user to define his own path to board files
 if(OT_NXP_BOARD_PATH)
     message(STATUS  "Using user defined board folder:\n"
@@ -143,18 +147,8 @@ if(OT_NXP_BOARD_PATH)
             "set(NXP_BOARD_LIB <name of the board lib>)"
         )
     endif()
-    if((NOT OT_NXP_FREERTOS_CONFIG_PATH) AND (OT_APP_CLI_FREERTOS))
-        # When using custom board file, the user must specify path to FreeRTOSConfig.h
-        message(FATAL_ERROR  "Path to FreeRTOSConfig.h file not specified. Please specify it using following option:\n"
-            "-DOT_NXP_FREERTOS_CONFIG_PATH=<path to FreeRTOSConfig.h folder>"
-            "or set it in your project"
-        )
-    endif()
     add_subdirectory(${OT_NXP_BOARD_PATH} ${PROJECT_BINARY_DIR}/board)
 elseif(OT_NXP_BOARD) # TODO: move to "else" when all boards are supported
-    if((NOT OT_NXP_FREERTOS_CONFIG_PATH) AND (OT_APP_CLI_FREERTOS OR OT_APP_BR_FREERTOS))
-        set(OT_NXP_FREERTOS_CONFIG_PATH ${PROJECT_SOURCE_DIR}/boards/${OT_NXP_BOARD}/freertos)
-    endif()
     set(NXP_BOARD_LIB nxp-${OT_NXP_BOARD}-board)
     add_subdirectory(boards)
 else()

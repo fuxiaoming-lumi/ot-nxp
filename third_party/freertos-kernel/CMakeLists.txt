@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2021, The OpenThread Authors.
+#  Copyright (c) 2023, NXP
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,21 +26,10 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_subdirectory(${OT_NXP_PLATFORM}_sdk)
+cmake_policy(SET CMP0079 NEW)
 
-if(OT_EXTERNAL_MBEDTLS)
-    # Build mbedtls library from the SDK
-    add_subdirectory(mbedtls)
-endif()
-
-if(OT_NXP_LWIP)
-    add_subdirectory(lwip)
-endif()
-
-if(OT_NXP_LWIP_WIFI)
-    add_subdirectory(wifi)
-endif()
-
-if(FREERTOS_PORT)
-    add_subdirectory(freertos-kernel)
-endif()
+# Each platform must set FreeRTOS CMake config flags in order to build freertos-kernel library
+# FREERTOS_PORT
+# FREERTOS_CONFIG_FILE_DIRECTORY
+# FREERTOS_HEAP
+add_subdirectory(${NXP_SDK_ROOT}/rtos/freertos/freertos-kernel ${PROJECT_BINARY_DIR}/freertos-kernel)
