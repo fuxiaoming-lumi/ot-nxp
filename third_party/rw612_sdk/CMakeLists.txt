@@ -26,6 +26,8 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+cmake_policy(SET CMP0079 NEW)
+
 set_property(SOURCE ${NXP_SDK_ROOT}/devices/RW612/gcc/startup_RW612.S PROPERTY LANGUAGE C)
 
 if (SDK_RELEASE)
@@ -65,17 +67,6 @@ else ()
 endif ()
 
 set(RW612_SDK_SOURCES
-#freertos files
-    ${NXP_SDK_ROOT}/rtos/freertos/freertos-kernel/event_groups.c
-    ${NXP_SDK_ROOT}/rtos/freertos/freertos-kernel/croutine.c
-    ${NXP_SDK_ROOT}/rtos/freertos/freertos-kernel/list.c
-    ${NXP_SDK_ROOT}/rtos/freertos/freertos-kernel/portable/GCC/ARM_CM33_NTZ/non_secure/port.c
-    ${NXP_SDK_ROOT}/rtos/freertos/freertos-kernel/portable/GCC/ARM_CM33_NTZ/non_secure/portasm.c
-    ${NXP_SDK_ROOT}/rtos/freertos/freertos-kernel/queue.c
-    ${NXP_SDK_ROOT}/rtos/freertos/freertos-kernel/stream_buffer.c
-    ${NXP_SDK_ROOT}/rtos/freertos/freertos-kernel/tasks.c
-    ${NXP_SDK_ROOT}/rtos/freertos/freertos-kernel/timers.c
-    ${NXP_SDK_ROOT}/rtos/freertos/freertos-kernel/portable/MemMang/heap_4.c
 #startup files
     ${NXP_SDK_ROOT}/devices/RW612/gcc/startup_RW612.S
     ${NXP_SDK_ROOT}/devices/RW612/system_RW612.c
@@ -311,9 +302,6 @@ add_library(${NXP_DRIVER_LIB}
 )
 
 set(RW612_SDK_INCLUDES
-#freertos includes
-        ${NXP_SDK_ROOT}/rtos/freertos/freertos-kernel/include
-        ${NXP_SDK_ROOT}/rtos/freertos/freertos-kernel/portable/GCC/ARM_CM33_NTZ/non_secure
 #CMSIS includes
         ${NXP_SDK_ROOT}/CMSIS/Core/Include
 #other SDK files
@@ -425,7 +413,6 @@ endif()
 target_include_directories(${NXP_DRIVER_LIB}
     PUBLIC
     ${RW612_SDK_INCLUDES}
-    ${OT_NXP_FREERTOS_CONFIG_PATH}
 )
 
 target_compile_definitions(${NXP_DRIVER_LIB}
@@ -478,6 +465,13 @@ target_compile_options(${NXP_DRIVER_LIB}
         -Wno-parentheses
 )
 
+target_link_libraries(${NXP_DRIVER_LIB}
+    PRIVATE
+        ${NXP_BOARD_LIB} # board.h needed by firmware loader for flexspi flash
+    PUBLIC
+        freertos_kernel
+)
+
 # Use Connectivity Framework CMake build system to build required modules
 # Select RW61x platform
 set(CONNFWK_PLATFORM rw61x)
@@ -495,9 +489,4 @@ target_link_libraries(connfwk-config
     INTERFACE
         ${NXP_DRIVER_LIB}
         ${NXP_BOARD_LIB}
-)
-
-target_link_libraries(${NXP_DRIVER_LIB}
-    PRIVATE
-        ${NXP_BOARD_LIB} # board.h needed by mflash driver TODO: check if the dependency can be removed in this driver
 )
