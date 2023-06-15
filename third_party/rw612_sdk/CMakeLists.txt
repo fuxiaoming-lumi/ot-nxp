@@ -438,7 +438,6 @@ target_compile_definitions(${NXP_DRIVER_LIB}
     -DOT_PLAT_SAVE_NVM_DATA_ON_IDLE=0
     -DgAspCapability_d=1
     -DFFU_CNS_TX_PWR_TABLE_CALIBRATION=1
-    -DMBEDTLS_MCUX_ELS_PKC_API # Needed to compile els_pkc port for mbedtls
     -DIMU_TASK_PRIORITY=2 # OSA priority: configMAX_PRIORITIES - (osa_prio) - 2 = FreeRTOS priority
     -DgPlatformDisableBleLowPower_d=0 # Enable BLE/15.4 low power feature
 )
