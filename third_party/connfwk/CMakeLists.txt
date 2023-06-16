@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2021, The OpenThread Authors.
+#  Copyright (c) 2023, NXP
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,25 +26,24 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_subdirectory(${OT_NXP_PLATFORM}_sdk)
+# Each platform must set Connectivity Framework CMake config flags in order to build its various libraries
+# CONNFWK_PLATFORM is mandatory to select the correct platform
+# To enable the build of some library, its flag must be set, for example:
+# set(CONNFWK_FLIB ON) -> will build the FunctionLib module as a lib
+# set(CONNFWK_PWR ON) -> will build the LowPower module as a lib
+# and so on ...
 
-if(OT_EXTERNAL_MBEDTLS)
-    # Build mbedtls library from the SDK
-    add_subdirectory(mbedtls)
-endif()
+# Add the Framework as a subdirectory
+add_subdirectory(${NXP_SDK_ROOT}/middleware/wireless/framework ${PROJECT_BINARY_DIR}/framework)
 
-if(OT_NXP_LWIP)
-    add_subdirectory(lwip)
-endif()
+# Forward SDK and OT include paths, compile definitions, etc... to the framework to resolve dependencies
+target_link_libraries(connfwk-config
+    INTERFACE
+        ${NXP_DRIVER_LIB}
+        ${NXP_BOARD_LIB}
+)
 
-if(OT_NXP_LWIP_WIFI)
-    add_subdirectory(wifi)
-endif()
-
-if(FREERTOS_PORT)
-    add_subdirectory(freertos-kernel)
-endif()
-
-if(CONNFWK_PLATFORM)
-    add_subdirectory(connfwk)
-endif()
+target_compile_definitions(connfwk-config
+    INTERFACE
+        ${CONNFWK_COMPILE_DEFINITIONS}
+)
