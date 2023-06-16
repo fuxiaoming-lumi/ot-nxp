@@ -78,9 +78,6 @@ else ()
 endif ()
 
 list(APPEND SDK_INCLUDES
-    #freertos includes
-    $ENV{NXP_RT1170_SDK_ROOT}/rtos/freertos/freertos-kernel/include
-    $ENV{NXP_RT1170_SDK_ROOT}/rtos/freertos/freertos-kernel/portable/GCC/ARM_CM4F
 #CMSIS includes
     ${NXP_SDK_ROOT}/CMSIS/Core/Include
 #other SDK files
@@ -124,16 +121,6 @@ list(APPEND SDK_INCLUDES
 )
 
 list(APPEND SDK_SOURCES
-    #freertos files
-    $ENV{NXP_RT1170_SDK_ROOT}/rtos/freertos/freertos-kernel/event_groups.c
-    $ENV{NXP_RT1170_SDK_ROOT}/rtos/freertos/freertos-kernel/croutine.c
-    $ENV{NXP_RT1170_SDK_ROOT}/rtos/freertos/freertos-kernel/list.c
-    $ENV{NXP_RT1170_SDK_ROOT}/rtos/freertos/freertos-kernel/portable/GCC/ARM_CM4F/port.c
-    $ENV{NXP_RT1170_SDK_ROOT}/rtos/freertos/freertos-kernel/queue.c
-    $ENV{NXP_RT1170_SDK_ROOT}/rtos/freertos/freertos-kernel/stream_buffer.c
-    $ENV{NXP_RT1170_SDK_ROOT}/rtos/freertos/freertos-kernel/tasks.c
-    $ENV{NXP_RT1170_SDK_ROOT}/rtos/freertos/freertos-kernel/timers.c
-    $ENV{NXP_RT1170_SDK_ROOT}/rtos/freertos/freertos-kernel/portable/MemMang/heap_4.c
 #startup files
     ${NXP_SDK_ROOT}/devices/MIMXRT1176/gcc/startup_MIMXRT1176_cm7.S
     #${NXP_SDK_ROOT}/devices/MIMXRT1176/mcuxpresso/startup_mimxrt1176_cm7.c
@@ -347,6 +334,7 @@ target_link_libraries(${NXP_DRIVER_LIB}
     ${NXP_BOARD_LIB}
     #Dependency to little_fs config files
     connfwk-platform-${OT_NXP_PLATFORM_FAMILY}
+    freertos_kernel
 )
 
 target_compile_options(${NXP_DRIVER_LIB}
