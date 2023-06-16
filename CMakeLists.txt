@@ -83,9 +83,6 @@ if(OT_NXP_LWIP)
     # They have some API's with the same name but different implementation, so no compatible
     # In case OT_NXP_LWIP is enabled, we have to exclude TCPLP from the build
     set(OT_EXCLUDE_TCPLP_LIB ON)
-endif()
-
-if(OT_NXP_LWIP)
     # As TCPLP lib is excluded from the build, we have to disable OT TCP feature
     target_compile_definitions(ot-config INTERFACE
         -DOPENTHREAD_CONFIG_TCP_ENABLE=0
@@ -111,18 +108,6 @@ target_compile_definitions(ot-config INTERFACE
     OPENTHREAD_PROJECT_CORE_CONFIG_FILE=${CORE_CONFIG_FILE}
     OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=${CORE_CONFIG_CHECK}
 )
-
-if(OT_NXP_DISABLE_TCP)
-    # Initially used to workaround duplicated symbols in lwip and tcplp stacks
-    # In the context of the coex_app_cli, the wifi stack uses lwip while ot uses tcplp
-    # Those stacks have some functions name in common (but incompatible)
-    # For now, we add the possibility to disable OT TCP feature to avoid using tcplp
-    # TODO: can we interface OT over lwip like done in Matter to avoid such problem ?
-    target_compile_definitions(ot-config
-        INTERFACE
-            -DOPENTHREAD_CONFIG_TCP_ENABLE=0
-    )
-endif()
 
 if(OT_NXP_PLATFORM_FAMILY)
     target_include_directories(ot-config INTERFACE
