@@ -468,22 +468,3 @@ target_link_libraries(${NXP_DRIVER_LIB}
     PUBLIC
         freertos_kernel
 )
-
-# Use Connectivity Framework CMake build system to build required modules
-# Select RW61x platform
-set(CONNFWK_PLATFORM rw61x)
-# Enable FunctionLib and FileSystem modules
-set(CONNFWK_FLIB ON)
-set(CONNFWK_FILESYSTEM ON)
-set(CONNFWK_PWR ON)
-set(CONNFWK_PWR_SYSTICKS ON)
-# Remove some platform features not needed
-set(CONNFWK_IGNORE_PLATFORM_SENSORS ON)
-# Add the Framework as a subdirectory
-add_subdirectory(${NXP_SDK_ROOT}/middleware/wireless/framework ${PROJECT_BINARY_DIR}/framework)
-# Forward SDK and OT include paths, compile definitions, etc... to the framework
-target_link_libraries(connfwk-config
-    INTERFACE
-        ${NXP_DRIVER_LIB}
-        ${NXP_BOARD_LIB}
-)
