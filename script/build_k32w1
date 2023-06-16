@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#  Copyright (c) 2021, The OpenThread Authors.
+#  Copyright (c) 2021-2023, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -56,6 +56,19 @@ readonly OT_OPTIONS_RCP_ONLY_UART_FLOW_CONTROL=(
     "-DUART_BAUD_RATE=1000000"
 )
 
+readonly OT_OPTIONS_CLI_FTD_ZC=(
+    "-DOT_NCP_SPI=OFF"
+    "-DOT_APP_CLI=OFF"
+    "-DOT_APP_RCP=OFF"
+    "-DOT_APP_NCP=OFF"
+    "-DOT_FTD=ON"
+    "-DOT_MTD=OFF"
+    "-DOT_ZB_SUPPORT=ON"
+    "-DOT_APP_FTD_ZC=ON"
+    "-DOT_PING_SENDER=ON"
+    "-DNO_THREAD_1_3_FLAGS=ON"
+)
+
 readonly OT_OPTIONS_NO_RCP=(
     "-DOT_APP_NCP=OFF"
     "-DOT_APP_RCP=OFF"
@@ -100,8 +113,24 @@ build_ot_rcp_only_uart_flow_control()
     if [ $? -eq 1 ]; then
         exit 1
     fi
-
 }
+
+build_ot_cli_ftd_zc()
+{
+    echo "Building dual mode app OT CLI FTD + Zigbee Coordinator..."
+    app_folder_name="ot_cli_ftd_zc"
+    local options=("${app_folder_name}")
+    options+=("${OT_OPTIONS_CLI_FTD_ZC[@]}")
+    options+=("${OT_OPTIONS[@]}")
+    options+=("$@")
+    options+=(" -DSDK_RELEASE=$SDK_RELEASE")
+    build "${options[@]}"
+
+    if [ $? -eq 1 ]; then
+        exit 1
+    fi
+}
+
 build_ot_without_rcp_image()
 {
     echo "Building OT without RCP image ..."
@@ -119,18 +148,22 @@ build_ot_without_rcp_image()
         exit 1
     fi
 }
+
 create_directory_and_build()
 {
     if [ "$1" == 'all' ]; then
         build_ot_rcp_only_uart_flow_control "$@"
         build_ot_without_rcp_image "$@"
+        # build_ot_cli_ftd_zc "$@"
 
     elif [ "$1" == 'ot_rcp_only_uart_flow_control' ]; then
         build_ot_rcp_only_uart_flow_control "$@"
     elif [ "$1" == 'ot_without_rcp_image' ]; then
         build_ot_without_rcp_image "$@"
+    elif [ "$1" == 'ot_cli_ftd_zc' ]; then
+        build_ot_cli_ftd_zc "$@"
     else
-        echo >&2 "Unsupported action: $1. Supported: all, ot_rcp_only_uart_flow_control, ot_without_rcp_image"
+        echo >&2 "Unsupported action: $1. Supported: all, ot_rcp_only_uart_flow_control, ot_without_rcp_image, ot_cli_ftd_zc"
         # 128 for Invalid arguments
         exit 128
     fi
