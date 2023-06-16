@@ -56,6 +56,7 @@ readonly OT_OPTIONS=(
     "-DOT_APP_NCP=OFF"
     "-DOT_APP_RCP=OFF"
     "-DOT_RCP=OFF"
+    "-DOT_MTD=OFF"
     "-DOT_APP_CLI=OFF"
     "-DOT_APP_BR_FREERTOS=ON"
     "-DOT_NXP_LWIP_ETH=OFF"
