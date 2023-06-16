@@ -28,7 +28,7 @@
 
 set(MBEDTLS_PORT_PATH ${OT_NXP_MBEDTLS_PATH}/port)
 
-FILE(GLOB KSDK_SOURCES ${MIDDLEWARE_PATH}/mbedtls/port/ksdk/*.c)
+FILE(GLOB KSDK_SOURCES ${MBEDTLS_PORT_PATH}/ksdk/*.c)
 
 list(APPEND thirdparty_src
     ${KSDK_SOURCES}
