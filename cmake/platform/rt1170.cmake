@@ -36,3 +36,38 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${PLATFORM_LINKER_FLAGS} "
 # FreeRTOS CMake config
 set(FREERTOS_PORT GCC_ARM_CM4F CACHE STRING "")
 set(FREERTOS_HEAP 4)
+
+# Connectivity Framework CMake config
+set(CONNFWK_PLATFORM rt1170)
+set(CONNFWK_PLATFORM_FAMILY imx_rt)
+set(CONNFWK_TRANSCEIVER ${OT_NXP_TRANSCEIVER})
+if ("${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0")
+    #Define here the default transceiver path can be overwritten by cmake -D option
+    set(OT_NXP_TRANSCEIVER_BIN_PATH "${PROJECT_SOURCE_DIR}/build_k32w061/rcp_only_uart_flow_control/bin/ot-rcp.elf.bin.h" CACHE PATH "Path to the transceiver binary file")
+    set(CONNFWK_TRANSCEIVER_BIN_PATH ${OT_NXP_TRANSCEIVER_BIN_PATH})
+    set(CONNFWK_OTW ON)
+    set(CONNFWK_COMPILE_DEFINITIONS
+        #OTW configurations
+        -DPLATFORM_OTW_RESET_PIN_PORT=3
+        -DPLATFORM_OTW_RESET_PIN_NUM=9
+        -DPLATFORM_OTW_DIO5_PIN_PORT=6 #TODO identify DIO pin on RT1170
+        -DPLATFORM_OTW_DIO5_PIN_NUM=26 #TODO identify DIO pin on RT1170
+    )
+    if ("${SPINEL_INTERFACE_TYPE}" STREQUAL "UART")
+        list(APPEND CONNFWK_COMPILE_DEFINITIONS
+            #HDLC configuration
+            -DSPINEL_UART_INSTANCE=7
+            -DSPINEL_ENABLE_RX_RTS=1
+            -DSPINEL_ENABLE_TX_RTS=1
+            -DSPINEL_UART_CLOCK_RATE=CLOCK_GetRootClockFreq\(kCLOCK_Root_Lpuart7\)
+        )
+    endif()
+elseif(${OT_NXP_TRANSCEIVER} STREQUAL "iwx12")
+    set(CONNFWK_COMPILE_DEFINITIONS
+        -DPLATFORM_RESET_PIN_PORT=3
+        -DPLATFORM_RESET_PIN_NUM=9
+    )
+endif()
+# Enable FunctionLib and FileSystem modules
+set(CONNFWK_FLIB ON)
+set(CONNFWK_FILESYSTEM ON)
