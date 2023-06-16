@@ -27,17 +27,14 @@
 #
 enable_language(C ASM)
 
-# Required to set MIDDLEWARE_PATH so that it is visible in current scope
-# and in parent scope
-set(MIDDLEWARE_PATH $ENV{NXP_RT1170_SDK_ROOT}/middleware)
-set(MIDDLEWARE_PATH ${MIDDLEWARE_PATH} PARENT_SCOPE)
+set(MIDDLEWARE_PATH ${NXP_SDK_ROOT}/middleware)
 
 set(EVK_MIMXRT1170 "evkbmimxrt1170" CACHE STRING "evkbmimxrt1170")
 set(MIMXRT1170_EVK "mimxrt1170evkb" CACHE STRING "mimxrt1170evkb")
 
 if (SDK_RELEASE)
     message("SDK_RELEASE driver path chosen")
-    set(DRIVER_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/devices/MIMXRT1176/drivers)
+    set(DRIVER_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/drivers)
     set(DRIVER_LPUART_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_LPSPI_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_PIT_FILES_PATH ${DRIVER_FILES_PATH})
@@ -52,32 +49,32 @@ if (SDK_RELEASE)
     set(DRIVER_CACHE_FILES_PATH ${DRIVER_FILES_PATH}/cm7)
     set(DRIVER_CAAM_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_MU_FILES_PATH ${DRIVER_FILES_PATH})
-    set(DEBUG_CONSOLE_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/devices/MIMXRT1176/utilities/debug_console)
-    set(ASSERT_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/devices/MIMXRT1176/utilities)
-    set(STR_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/devices/MIMXRT1176/utilities/str)
-    set(FSL_FLEXSPI_NOR_BOOT_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/devices/MIMXRT1176/xip)
-    set(INCBIN_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/devices/MIMXRT1176/utilities/incbin)
+    set(DEBUG_CONSOLE_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/utilities/debug_console)
+    set(ASSERT_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/utilities)
+    set(STR_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/utilities/str)
+    set(FSL_FLEXSPI_NOR_BOOT_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/xip)
+    set(INCBIN_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/utilities/incbin)
 else ()
     message("SDK_DEV driver path chosen")
-    set(DRIVER_LPUART_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/platform/drivers/lpuart)
-    set(DRIVER_LPSPI_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/platform/drivers/lpspi)
-    set(DRIVER_PIT_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/platform/drivers/pit)
-    set(DRIVER_GPT_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/platform/drivers/gpt)
-    set(DRIVER_FLEXSPI_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/platform/drivers/flexspi)
-    set(DRIVER_IGPIO_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/platform/drivers/igpio)
-    set(DRIVER_COMMON_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/platform/drivers/common)
-    set(DRIVER_DEVICE_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/devices/MIMXRT1176/drivers)
-    set(DRIVER_EDMA_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/platform/drivers/edma)
-    set(DRIVER_DMAMUX_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/platform/drivers/dmamux)
-    set(DRIVER_USDHC_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/platform/drivers/usdhc)
-    set(DRIVER_CACHE_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/platform/drivers/cache/armv7-m7)
-    set(DRIVER_CAAM_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/platform/drivers/caam)
-    set(DRIVER_MU_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/platform/drivers/mu)
-    set(DEBUG_CONSOLE_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/platform/utilities/debug_console)
-    set(ASSERT_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/platform/utilities/assert)
-    set(STR_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/platform/utilities/str)
-    set(FSL_FLEXSPI_NOR_BOOT_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/devices/MIMXRT1176/xip)
-    set(INCBIN_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/platform/utilities/misc_utilities)
+    set(DRIVER_LPUART_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/lpuart)
+    set(DRIVER_LPSPI_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/lpspi)
+    set(DRIVER_PIT_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/pit)
+    set(DRIVER_GPT_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/gpt)
+    set(DRIVER_FLEXSPI_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/flexspi)
+    set(DRIVER_IGPIO_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/igpio)
+    set(DRIVER_COMMON_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/common)
+    set(DRIVER_DEVICE_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/drivers)
+    set(DRIVER_EDMA_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/edma)
+    set(DRIVER_DMAMUX_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/dmamux)
+    set(DRIVER_USDHC_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/usdhc)
+    set(DRIVER_CACHE_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/cache/armv7-m7)
+    set(DRIVER_CAAM_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/caam)
+    set(DRIVER_MU_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/mu)
+    set(DEBUG_CONSOLE_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/debug_console)
+    set(ASSERT_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/assert)
+    set(STR_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/str)
+    set(FSL_FLEXSPI_NOR_BOOT_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/xip)
+    set(INCBIN_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/misc_utilities)
 endif ()
 
 list(APPEND SDK_INCLUDES
@@ -85,9 +82,9 @@ list(APPEND SDK_INCLUDES
     $ENV{NXP_RT1170_SDK_ROOT}/rtos/freertos/freertos-kernel/include
     $ENV{NXP_RT1170_SDK_ROOT}/rtos/freertos/freertos-kernel/portable/GCC/ARM_CM4F
 #CMSIS includes
-    $ENV{NXP_RT1170_SDK_ROOT}/CMSIS/Core/Include
+    ${NXP_SDK_ROOT}/CMSIS/Core/Include
 #other SDK files
-    $ENV{NXP_RT1170_SDK_ROOT}/devices/MIMXRT1176
+    ${NXP_SDK_ROOT}/devices/MIMXRT1176
     ${DRIVER_DEVICE_FILES_PATH}
     ${DRIVER_DEVICE_FILES_PATH}/cm7
     ${DRIVER_COMMON_FILES_PATH}
@@ -105,25 +102,25 @@ list(APPEND SDK_INCLUDES
     ${DEBUG_CONSOLE_FILES_PATH}
     ${STR_FILES_PATH}
 # XIP
-    $ENV{NXP_RT1170_SDK_ROOT}/devices/MIMXRT1176/xip
-    $ENV{NXP_RT1170_SDK_ROOT}/boards/${EVK_MIMXRT1170}/xip
+    ${NXP_SDK_ROOT}/devices/MIMXRT1176/xip
+    ${NXP_SDK_ROOT}/boards/${EVK_MIMXRT1170}/xip
 #SDK components
-    $ENV{NXP_RT1170_SDK_ROOT}/components/uart
-    $ENV{NXP_RT1170_SDK_ROOT}/components/serial_manager
-    $ENV{NXP_RT1170_SDK_ROOT}/components/lists
-    $ENV{NXP_RT1170_SDK_ROOT}/components/osa
-    $ENV{NXP_RT1170_SDK_ROOT}/components/common_task
-    $ENV{NXP_RT1170_SDK_ROOT}/components/log
-    $ENV{NXP_RT1170_SDK_ROOT}/components/timer_manager
-    $ENV{NXP_RT1170_SDK_ROOT}/components/timer
-    $ENV{NXP_RT1170_SDK_ROOT}/components/internal_flash
-    $ENV{NXP_RT1170_SDK_ROOT}/components/spi
-    $ENV{NXP_RT1170_SDK_ROOT}/components/gpio
-    $ENV{NXP_RT1170_SDK_ROOT}/components/time_stamp
+    ${NXP_SDK_ROOT}/components/uart
+    ${NXP_SDK_ROOT}/components/serial_manager
+    ${NXP_SDK_ROOT}/components/lists
+    ${NXP_SDK_ROOT}/components/osa
+    ${NXP_SDK_ROOT}/components/common_task
+    ${NXP_SDK_ROOT}/components/log
+    ${NXP_SDK_ROOT}/components/timer_manager
+    ${NXP_SDK_ROOT}/components/timer
+    ${NXP_SDK_ROOT}/components/internal_flash
+    ${NXP_SDK_ROOT}/components/spi
+    ${NXP_SDK_ROOT}/components/gpio
+    ${NXP_SDK_ROOT}/components/time_stamp
 #File system
-    $ENV{NXP_RT1170_SDK_ROOT}/middleware/littlefs
-    $ENV{NXP_RT1170_SDK_ROOT}/components/flash/mflash
-    $ENV{NXP_RT1170_SDK_ROOT}/components/flash/mflash/${MIMXRT1170_EVK}
+    ${NXP_SDK_ROOT}/middleware/littlefs
+    ${NXP_SDK_ROOT}/components/flash/mflash
+    ${NXP_SDK_ROOT}/components/flash/mflash/${MIMXRT1170_EVK}
 )
 
 list(APPEND SDK_SOURCES
@@ -138,9 +135,9 @@ list(APPEND SDK_SOURCES
     $ENV{NXP_RT1170_SDK_ROOT}/rtos/freertos/freertos-kernel/timers.c
     $ENV{NXP_RT1170_SDK_ROOT}/rtos/freertos/freertos-kernel/portable/MemMang/heap_4.c
 #startup files
-    $ENV{NXP_RT1170_SDK_ROOT}/devices/MIMXRT1176/gcc/startup_MIMXRT1176_cm7.S
-    #$ENV{NXP_RT1170_SDK_ROOT}/devices/MIMXRT1176/mcuxpresso/startup_mimxrt1176_cm7.c
-    $ENV{NXP_RT1170_SDK_ROOT}/devices/MIMXRT1176/system_MIMXRT1176_cm7.c
+    ${NXP_SDK_ROOT}/devices/MIMXRT1176/gcc/startup_MIMXRT1176_cm7.S
+    #${NXP_SDK_ROOT}/devices/MIMXRT1176/mcuxpresso/startup_mimxrt1176_cm7.c
+    ${NXP_SDK_ROOT}/devices/MIMXRT1176/system_MIMXRT1176_cm7.c
 #other SDK files
     ${DRIVER_LPUART_FILES_PATH}/fsl_lpuart.c
     ${DRIVER_LPSPI_FILES_PATH}/fsl_lpspi.c
@@ -165,24 +162,24 @@ list(APPEND SDK_SOURCES
     ${ASSERT_FILES_PATH}/fsl_assert.c
 # XIP
     ${FSL_FLEXSPI_NOR_BOOT_FILES_PATH}/fsl_flexspi_nor_boot.c
-    $ENV{NXP_RT1170_SDK_ROOT}/boards/${EVK_MIMXRT1170}/xip/${EVK_MIMXRT1170}_flexspi_nor_config.c
+    ${NXP_SDK_ROOT}/boards/${EVK_MIMXRT1170}/xip/${EVK_MIMXRT1170}_flexspi_nor_config.c
 #SDK components
-    $ENV{NXP_RT1170_SDK_ROOT}/components/serial_manager/fsl_component_serial_manager.c
-    $ENV{NXP_RT1170_SDK_ROOT}/components/serial_manager/fsl_component_serial_port_uart.c
-    $ENV{NXP_RT1170_SDK_ROOT}/components/spi/fsl_adapter_lpspi.c
-    $ENV{NXP_RT1170_SDK_ROOT}/components/uart/fsl_adapter_lpuart.c
-    $ENV{NXP_RT1170_SDK_ROOT}/components/lists/fsl_component_generic_list.c
-    $ENV{NXP_RT1170_SDK_ROOT}/components/osa/fsl_os_abstraction_free_rtos.c
-    $ENV{NXP_RT1170_SDK_ROOT}/components/log/fsl_component_log.c
-    $ENV{NXP_RT1170_SDK_ROOT}/components/log/fsl_component_log_backend_debugconsole.c
-    $ENV{NXP_RT1170_SDK_ROOT}/components/timer_manager/fsl_component_timer_manager.c
-    $ENV{NXP_RT1170_SDK_ROOT}/components/timer/fsl_adapter_pit.c
-    $ENV{NXP_RT1170_SDK_ROOT}/components/internal_flash/${EVK_MIMXRT1170}/fsl_adapter_flexspi_nor_flash.c
-    $ENV{NXP_RT1170_SDK_ROOT}/components/gpio/fsl_adapter_igpio.c
+    ${NXP_SDK_ROOT}/components/serial_manager/fsl_component_serial_manager.c
+    ${NXP_SDK_ROOT}/components/serial_manager/fsl_component_serial_port_uart.c
+    ${NXP_SDK_ROOT}/components/spi/fsl_adapter_lpspi.c
+    ${NXP_SDK_ROOT}/components/uart/fsl_adapter_lpuart.c
+    ${NXP_SDK_ROOT}/components/lists/fsl_component_generic_list.c
+    ${NXP_SDK_ROOT}/components/osa/fsl_os_abstraction_free_rtos.c
+    ${NXP_SDK_ROOT}/components/log/fsl_component_log.c
+    ${NXP_SDK_ROOT}/components/log/fsl_component_log_backend_debugconsole.c
+    ${NXP_SDK_ROOT}/components/timer_manager/fsl_component_timer_manager.c
+    ${NXP_SDK_ROOT}/components/timer/fsl_adapter_pit.c
+    ${NXP_SDK_ROOT}/components/internal_flash/${EVK_MIMXRT1170}/fsl_adapter_flexspi_nor_flash.c
+    ${NXP_SDK_ROOT}/components/gpio/fsl_adapter_igpio.c
 #File system
-    $ENV{NXP_RT1170_SDK_ROOT}/middleware/littlefs/lfs.c
-    $ENV{NXP_RT1170_SDK_ROOT}/middleware/littlefs/lfs_util.c
-    $ENV{NXP_RT1170_SDK_ROOT}/components/flash/mflash/${MIMXRT1170_EVK}/mflash_drv.c
+    ${NXP_SDK_ROOT}/middleware/littlefs/lfs.c
+    ${NXP_SDK_ROOT}/middleware/littlefs/lfs_util.c
+    ${NXP_SDK_ROOT}/components/flash/mflash/${MIMXRT1170_EVK}/mflash_drv.c
 )
 
 list(APPEND SDK_COMPILE_DEFINITIONS
@@ -222,30 +219,30 @@ list(APPEND SDK_COMPILE_DEFINITIONS
 if ("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
     list(APPEND SDK_INCLUDES
             ${DRIVER_USDHC_FILES_PATH}
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/wifidriver
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/wifi_bt_firmware
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/sdmmc/common
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/sdmmc/sdio
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/sdmmc/host/usdhc
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/sdmmc/osa
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/incl/wifidriver
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/incl
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/incl/wlcmgr
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/incl/port/os
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/wifidriver
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/wifidriver/incl
-            $ENV{NXP_RT1170_SDK_ROOT}/components/wifi_bt_module/template
+            ${NXP_SDK_ROOT}/middleware/wifi_nxp/wifidriver
+            ${NXP_SDK_ROOT}/middleware/wifi_nxp/wifi_bt_firmware
+            ${NXP_SDK_ROOT}/middleware/sdmmc/common
+            ${NXP_SDK_ROOT}/middleware/sdmmc/sdio
+            ${NXP_SDK_ROOT}/middleware/sdmmc/host/usdhc
+            ${NXP_SDK_ROOT}/middleware/sdmmc/osa
+            ${NXP_SDK_ROOT}/middleware/wifi_nxp/incl/wifidriver
+            ${NXP_SDK_ROOT}/middleware/wifi_nxp/incl
+            ${NXP_SDK_ROOT}/middleware/wifi_nxp/incl/wlcmgr
+            ${NXP_SDK_ROOT}/middleware/wifi_nxp/incl/port/os
+            ${NXP_SDK_ROOT}/middleware/wifi_nxp/wifidriver
+            ${NXP_SDK_ROOT}/middleware/wifi_nxp/wifidriver/incl
+            ${NXP_SDK_ROOT}/components/wifi_bt_module/template
     )
     list(APPEND SDK_SOURCES
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/sdmmc/common/fsl_sdmmc_common.c
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/sdmmc/sdio/fsl_sdio.c
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/sdmmc/host/usdhc/non_blocking/fsl_sdmmc_host.c
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/sdmmc/osa/fsl_sdmmc_osa.c
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/wifidriver/firmware_dnld.c
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/wifidriver/mlan_sdio.c
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/wifidriver/sdio.c
+            ${NXP_SDK_ROOT}/middleware/sdmmc/common/fsl_sdmmc_common.c
+            ${NXP_SDK_ROOT}/middleware/sdmmc/sdio/fsl_sdio.c
+            ${NXP_SDK_ROOT}/middleware/sdmmc/host/usdhc/non_blocking/fsl_sdmmc_host.c
+            ${NXP_SDK_ROOT}/middleware/sdmmc/osa/fsl_sdmmc_osa.c
+            ${NXP_SDK_ROOT}/middleware/wifi_nxp/wifidriver/firmware_dnld.c
+            ${NXP_SDK_ROOT}/middleware/wifi_nxp/wifidriver/mlan_sdio.c
+            ${NXP_SDK_ROOT}/middleware/wifi_nxp/wifidriver/sdio.c
             ${DRIVER_USDHC_FILES_PATH}/fsl_usdhc.c
-            $ENV{NXP_RT1170_SDK_ROOT}/components/wifi_bt_module/template/wifi_bt_config.c
+            ${NXP_SDK_ROOT}/components/wifi_bt_module/template/wifi_bt_config.c
     )
     list(APPEND SDK_COMPILE_DEFINITIONS
         -DIW61x
@@ -263,22 +260,22 @@ endif ()
 
 if (MULTICORE_LOGGING)
     list(APPEND SDK_INCLUDES
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/include
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/include/environment/freertos
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/include/platform/imxrt1170
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/mcmgr/src
+        ${NXP_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/include
+        ${NXP_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/include/environment/freertos
+        ${NXP_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/include/platform/imxrt1170
+        ${NXP_SDK_ROOT}/middleware/multicore/mcmgr/src
     )
     list(APPEND SDK_SOURCES
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/mcmgr/src/mcmgr_mu_internal.c
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/mcmgr/src/mcmgr.c
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/mcmgr/src/mcmgr_internal_core_api_imxrt1170.c
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/common/llist.c
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/rpmsg_lite.c
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/rpmsg_ns.c
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/virtio/virtqueue.c
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/porting/environment/rpmsg_env_freertos.c
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/rpmsg_queue.c
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/porting/platform/imxrt1170/rpmsg_platform.c
+        ${NXP_SDK_ROOT}/middleware/multicore/mcmgr/src/mcmgr_mu_internal.c
+        ${NXP_SDK_ROOT}/middleware/multicore/mcmgr/src/mcmgr.c
+        ${NXP_SDK_ROOT}/middleware/multicore/mcmgr/src/mcmgr_internal_core_api_imxrt1170.c
+        ${NXP_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/common/llist.c
+        ${NXP_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/rpmsg_lite.c
+        ${NXP_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/rpmsg_ns.c
+        ${NXP_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/virtio/virtqueue.c
+        ${NXP_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/porting/environment/rpmsg_env_freertos.c
+        ${NXP_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/rpmsg_queue.c
+        ${NXP_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/porting/platform/imxrt1170/rpmsg_platform.c
         ${INCBIN_FILES_PATH}/fsl_incbin.S
     )
 endif ()
