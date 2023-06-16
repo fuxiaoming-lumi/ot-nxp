@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2021, The OpenThread Authors.
+#  Copyright (c) 2021-2023, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -68,6 +68,7 @@ set(K32W1_SDK_SOURCES
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/platform/kw45_k32w1/fwk_platform_extflash.c
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/NVM/Source/NV_Flash.c
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/LowPower/PWR.c
+    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/RNG/RNG.c
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/SecLib/SecLib_sss.c
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/boards/kw45_k32w1/K32W1480/clock_config.c
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/boards/kw45_k32w1/hardware_init.c
@@ -114,6 +115,8 @@ set(K32W1_SDK_SOURCES
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/secure-subsystem/src/sscp/fsl_sss_mgmt.c
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/secure-subsystem/src/sscp/fsl_sss_sscp.c
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/secure-subsystem/port/kw45_k4w1/sss_init.c
+    $ENV{NXP_K32W1_SDK_ROOT}/middleware/secure-subsystem/port/kw45_k4w1/sss_aes.c
+    $ENV{NXP_K32W1_SDK_ROOT}/middleware/secure-subsystem/port/kw45_k4w1/sss_ccm.c
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/ieee-802.15.4/utils/dbg_io.c
     ${PROJECT_SOURCE_DIR}/third_party/k32w1_sdk/board_lp.c
 )
@@ -128,10 +131,9 @@ if (USE_NBU)
             $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/imu/fsl_imu.c
         )
     endif()
+
     list(APPEND K32W1_SDK_SOURCES
         ${PROJECT_SOURCE_DIR}/src/k32w1/k32w1/startup_K32W1480.S
-        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/SerialDevice/ASP.c
-        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/SerialDevice/Phy.c
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/PhyTime.c
         $ENV{NXP_K32W1_SDK_ROOT}/components/rpmsg/fsl_adapter_rpmsg.c
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/multicore/mcmgr/src/mcmgr.c
@@ -143,6 +145,14 @@ if (USE_NBU)
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/multicore/mcmgr/src/mcmgr_imu_internal.c
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/multicore/mcmgr/src/mcmgr_internal_core_api_k32w1.c
     )
+
+    if (NOT OT_ZB_SUPPORT)
+        list(APPEND K32W1_SDK_SOURCES
+            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/SerialDevice/ASP.c
+            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/SerialDevice/Phy.c
+        )
+    endif()
+
 else()
      list(APPEND K32W1_SDK_SOURCES
        $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/gcc/startup_K32W1480.S
@@ -308,5 +318,10 @@ target_include_directories(${NXP_DRIVER_LIB}
     PUBLIC
     ${K32W1_SDK_INCLUDES}
 )
+
+if (OT_ZB_SUPPORT)
+    add_subdirectory(zigbee)
+    target_link_libraries(${NXP_DRIVER_LIB} PUBLIC nxp-k32w1-zigbee)
+endif()
 
 target_link_libraries(${NXP_DRIVER_LIB} PRIVATE ot-config)
