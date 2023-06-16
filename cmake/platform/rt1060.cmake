@@ -36,3 +36,28 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${PLATFORM_LINKER_FLAGS} "
 # FreeRTOS CMake config
 set(FREERTOS_PORT GCC_ARM_CM4F CACHE STRING "")
 set(FREERTOS_HEAP 4)
+
+# Use Connectivity Framework CMake build system to build required modules
+set(CONNFWK_PLATFORM rt1060)
+set(CONNFWK_PLATFORM_FAMILY imx_rt)
+set(CONNFWK_TRANSCEIVER ${OT_NXP_TRANSCEIVER})
+if ("${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0")
+    #Define here the default transceiver path can be overwritten by cmake -D option
+    set(OT_NXP_TRANSCEIVER_BIN_PATH "${PROJECT_SOURCE_DIR}/build_k32w061/rcp_only_uart_flow_control/bin/ot-rcp.elf.bin.h" CACHE PATH "Path to the transceiver binary file")
+    set(CONNFWK_TRANSCEIVER_BIN_PATH ${OT_NXP_TRANSCEIVER_BIN_PATH})
+    set(CONNFWK_OTW ON)
+    set(CONNFWK_COMPILE_DEFINITIONS
+        #HDLC configuration
+        SPINEL_UART_INSTANCE=3
+        SPINEL_ENABLE_RX_RTS=1
+        SPINEL_ENABLE_TX_RTS=1
+        #OTW configurations
+        PLATFORM_OTW_RESET_PIN_PORT=6
+        PLATFORM_OTW_RESET_PIN_NUM=2
+        PLATFORM_OTW_DIO5_PIN_PORT=6
+        PLATFORM_OTW_DIO5_PIN_NUM=26
+    )
+endif()
+# Enable FunctionLib and FileSystem modules
+set(CONNFWK_FLIB ON)
+set(CONNFWK_FILESYSTEM ON)

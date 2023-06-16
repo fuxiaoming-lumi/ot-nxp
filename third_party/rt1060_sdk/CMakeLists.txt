@@ -235,43 +235,10 @@ target_compile_definitions(${NXP_DRIVER_LIB}
     -DFSL_FEATURE_PHYKSZ8081_USE_RMII50M_MODE
 )
 
-# Use Connectivity Framework CMake build system to build required modules
-set(CONNFWK_PLATFORM ${OT_NXP_PLATFORM})
-set(CONNFWK_PLATFORM_FAMILY ${OT_NXP_PLATFORM_FAMILY})
-set(CONNFWK_TRANSCEIVER ${OT_NXP_TRANSCEIVER})
-if ("${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0")
-    #Define here the default transceiver path can be overwritten by cmake -D option
-    set(OT_NXP_TRANSCEIVER_BIN_PATH "${PROJECT_SOURCE_DIR}/build_k32w061/rcp_only_uart_flow_control/bin/ot-rcp.elf.bin.h" CACHE PATH "Path to the transceiver binary file")
-    set(CONNFWK_TRANSCEIVER_BIN_PATH ${OT_NXP_TRANSCEIVER_BIN_PATH})
-    set(CONNFWK_OTW ON)
-endif()
-# Enable FunctionLib and FileSystem modules
-set(CONNFWK_FLIB ON)
-set(CONNFWK_FILESYSTEM ON)
-# Add the Framework as a subdirectory
-add_subdirectory(${MIDDLEWARE_PATH}/wireless/framework ${PROJECT_BINARY_DIR}/framework)
-# Forward SDK and OT include paths, compile definitions, etc... to the framework
-target_link_libraries(connfwk-config
-    INTERFACE
-        ${NXP_DRIVER_LIB}
-        ${NXP_BOARD_LIB}
-)
 if ("${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0")
     target_compile_definitions(${NXP_DRIVER_LIB}
         PUBLIC
         -DHAL_UART_DMA_ENABLE=1 # OTW requires the DMA to be enabled
-    )
-    target_compile_definitions(connfwk-platform-${CONNFWK_PLATFORM_FAMILY}
-        PRIVATE
-        #HDLC configuration
-        -DSPINEL_UART_INSTANCE=3
-        -DSPINEL_ENABLE_RX_RTS=1
-        -DSPINEL_ENABLE_TX_RTS=1
-        #OTW configurations
-        -DPLATFORM_OTW_RESET_PIN_PORT=6
-        -DPLATFORM_OTW_RESET_PIN_NUM=2
-        -DPLATFORM_OTW_DIO5_PIN_PORT=6
-        -DPLATFORM_OTW_DIO5_PIN_NUM=26
     )
 endif()
 
@@ -281,8 +248,12 @@ target_link_libraries(${NXP_DRIVER_LIB}
     ${NXP_BOARD_LIB}
     #Dependency to little_fs config files
     connfwk-platform-${OT_NXP_PLATFORM_FAMILY}
-    # mbedtls_hardware_poll is wrapped to another definition
-    -Wl,--wrap=mbedtls_hardware_poll
+)
+
+target_link_options(${NXP_DRIVER_LIB}
+    PUBLIC
+        # mbedtls_hardware_poll is wrapped to another definition
+        -Wl,--wrap=mbedtls_hardware_poll
 )
 
 target_compile_options(${NXP_DRIVER_LIB}
