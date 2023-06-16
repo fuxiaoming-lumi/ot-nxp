@@ -28,8 +28,6 @@
 
 cmake_policy(SET CMP0079 NEW)
 
-set_property(SOURCE ${NXP_SDK_ROOT}/devices/RW612/gcc/startup_RW612.S PROPERTY LANGUAGE C)
-
 if (SDK_RELEASE)
     message("SDK_RELEASE driver path chosen")
     set(DRIVER_FILES_PATH ${NXP_SDK_ROOT}/devices/RW612/drivers)
