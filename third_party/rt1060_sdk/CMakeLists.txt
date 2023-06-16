@@ -95,8 +95,6 @@ else ()
     set(FSL_FLEXSPI_NOR_BOOT_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1052/xip)
 endif ()
 
-set_property(SOURCE ${NXP_SDK_ROOT}/devices/MIMXRT1062/gcc/startup_MIMXRT1062.S PROPERTY LANGUAGE C)
-
 add_library(${NXP_DRIVER_LIB}
 #startup files
     ${NXP_SDK_ROOT}/devices/MIMXRT1062/gcc/startup_MIMXRT1062.S
