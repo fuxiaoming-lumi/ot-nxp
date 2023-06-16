@@ -46,6 +46,7 @@ message(STATUS "NXP Platform: ${OT_NXP_PLATFORM}")
 include(${PROJECT_SOURCE_DIR}/cmake/utils.cmake)
 message(STATUS "Package Version: ${OT_PACKAGE_VERSION}")
 otnxp_git_version(OT_PACKAGE_VERSION)
+set(OT_PACKAGE_VERSION "${OT_PACKAGE_VERSION}" CACHE STRING "")
 message(STATUS "Setting default package version: ${OT_PACKAGE_VERSION}")
 message(STATUS "Package Version: ${OT_PACKAGE_VERSION}")
 
