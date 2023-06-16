@@ -95,7 +95,7 @@ main()
     #         then NXP_RT1060_SDK_ROOT points to a cloned repository
 
     if [ -z "$NXP_RT1060_SDK_ROOT" ]; then
-        export NXP_RT1060_SDK_ROOT="./repo"
+        export NXP_RT1060_SDK_ROOT="${OT_SRCDIR}/third_party/rt1060_sdk/repo"
         SDK_TYPE="GITHUB"
     fi
 
@@ -116,6 +116,8 @@ main()
     options+=("$@")
 
     options+=("-DSDK_TYPE=$SDK_TYPE")
+
+    options+=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
 
     build "${options[@]}"
 }
