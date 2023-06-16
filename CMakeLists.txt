@@ -40,19 +40,17 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
-message(STATUS "NXP Platform Family: ${OT_NXP_PLATFORM_FAMILY}")
-message(STATUS "NXP Platform: ${OT_NXP_PLATFORM}")
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/platform)
 
-include(${PROJECT_SOURCE_DIR}/cmake/utils.cmake)
-message(STATUS "Package Version: ${OT_PACKAGE_VERSION}")
+include(utils)
+include(${OT_NXP_PLATFORM} OPTIONAL)
+
 otnxp_git_version(OT_PACKAGE_VERSION)
 set(OT_PACKAGE_VERSION "${OT_PACKAGE_VERSION}" CACHE STRING "")
 message(STATUS "Setting default package version: ${OT_PACKAGE_VERSION}")
 message(STATUS "Package Version: ${OT_PACKAGE_VERSION}")
-
-if(EXISTS ${PROJECT_SOURCE_DIR}/cmake/platform/${OT_NXP_PLATFORM}.cmake)
-    include(${PROJECT_SOURCE_DIR}/cmake/platform/${OT_NXP_PLATFORM}.cmake)
-endif()
+message(STATUS "NXP Platform: ${OT_NXP_PLATFORM}")
 
 set(OT_PLATFORM_LIB openthread-${OT_NXP_PLATFORM})
 set(NXP_DRIVER_LIB nxp-${OT_NXP_PLATFORM}-driver)
