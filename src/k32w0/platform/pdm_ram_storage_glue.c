@@ -56,9 +56,25 @@
 
 #define MAX_QUEUE_SIZE (16)
 
-/* Segment data size is: D_SEGMENT_MEMORY_SIZE (4096) - D_PDM_NVM_SEGMENT_HEADER_SIZE (size of internal header).
+/* PDM can use either internal flash or external flash for persistent storage.
+ * Set PDM_SAVE_IDLE_PAGE_SIZE to internal flash page size (512) as default.
+ *
+ * If an application uses PDM in external flash, it's mandatory to define
+ * PDM_SAVE_IDLE_PAGE_SIZE to the external flash page size.
+ */
+#ifndef PDM_SAVE_IDLE_PAGE_SIZE
+#include "fsl_flash.h"
+#define PDM_SAVE_IDLE_PAGE_SIZE FLASH_PAGE_SIZE
+#else
+#include "Eeprom.h"
+#if PDM_SAVE_IDLE_PAGE_SIZE != gEepromParams_SectorSize_c
+#error "PDM_SAVE_IDLE_PAGE_SIZE should be the size of external flash page (gEepromParams_SectorSize_c)"
+#endif
+#endif // PDM_SAVE_IDLE_PAGE_SIZE
+
+/* Segment data size is: PDM page size - size of internal header (D_PDM_NVM_SEGMENT_HEADER_SIZE).
  * Subtract 64 to have more margin. */
-#define PDM_SEGMENT_SIZE (4096 - 64)
+#define PDM_SEGMENT_SIZE (PDM_SAVE_IDLE_PAGE_SIZE - 64)
 /* Dummy keys are introduced at the end of a PDM region if the current key does not fit the free space. */
 #define kRamBufferDummyKey (uint16_t)0xFFFF
 
@@ -73,6 +89,8 @@ static uint8_t      u8QueueWritePtr;
 static uint8_t      u8QueueReadPtr;
 static osaMutexId_t asQueueMutex;
 static bool_t       asQueueMutexTaken;
+/* Buffer used to temporary copy RAM buffer data in order to sync save it. */
+static uint8_t sSegmentBuffer[PDM_SEGMENT_SIZE];
 
 static uint8_t u8IncrementQueuePtr(uint8_t u8CurrentValue);
 
@@ -97,9 +115,6 @@ extern void *otPlatRealloc(void *ptr, size_t aSize);
 static PDM_portConfig_t pdm_PortContext = {NULL, 0, NULL, 0};
 
 #if ENABLE_STORAGE_DYNAMIC_MEMORY
-
-/* Buffer used to temporary copy RAM buffer data in order to sync save it. */
-static uint8_t sSegmentBuffer[PDM_SEGMENT_SIZE];
 
 /* Alloc/Realloc staging buffer in PDM encryption context */
 static rsError stagingBufferResize(PDM_portConfig_t *pdm_PortContext, uint16_t newSize)
