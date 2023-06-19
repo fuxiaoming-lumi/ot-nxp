@@ -65,6 +65,7 @@ if (OT_ZB_SUPPORT OR OT_BLE_SUPPORT)
         OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE=0
     )
 endif()
+
 if (NOT OT_MAC_CSL_RECEIVER_ENABLE)
     # disable CSL receiver for now
     list(APPEND OT_PLATFORM_DEFINES
@@ -75,7 +76,7 @@ endif()
 if (OT_BUILD_COEX)
     list(APPEND OT_PLATFORM_DEFINES
         OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE=1
-    )
+)
 endif()
 
 if (OT_NCP_SPI)
@@ -87,13 +88,21 @@ if (OT_NCP_SPI)
     )
 endif()
 
+if (NO_THREAD_1_3_FLAGS)
+    list(APPEND OT_PLATFORM_DEFINES
+        "NO_THREAD_1_3_FLAGS"
+    )
+endif()
+
+if (OT_ANTENNA_DIVERSITY)
+    list(APPEND OT_PLATFORM_DEFINES
+        "ANTENNA_DIVERSITY_ENABLE"
+)
+endif()
+
 set(K32W0_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
 )
 
-if(OT_BUILD_K32W061)
-    include(k32w061/k32w061.cmake)
-elseif(OT_BUILD_JN5189)
-    include(jn5189/jn5189.cmake)
-endif()
+include(${OT_NXP_PLATFORM}/${OT_NXP_PLATFORM}.cmake)

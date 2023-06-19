@@ -26,14 +26,17 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(OT_BUILD_RT1060)
-    add_subdirectory(rt1060_sdk)
+add_subdirectory(${OT_NXP_PLATFORM}_sdk)
+
+if(OT_EXTERNAL_MBEDTLS)
+    # Build mbedtls library from the SDK
+    add_subdirectory(mbedtls)
 endif()
 
-if(OT_BUILD_K32W061)
-    add_subdirectory(k32w061_sdk)
+if(OT_NXP_LWIP)
+    add_subdirectory(lwip)
 endif()
 
-if(OT_BUILD_JN5189)
-    add_subdirectory(jn5189_sdk)
+if(OT_NXP_LWIP_WIFI)
+    add_subdirectory(wifi)
 endif()

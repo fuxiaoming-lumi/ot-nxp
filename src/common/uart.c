@@ -1,5 +1,6 @@
 /*
  *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2022, NXP.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -32,43 +33,53 @@
  *
  */
 
+/* -------------------------------------------------------------------------- */
+/*                                  Includes                                  */
+/* -------------------------------------------------------------------------- */
+
 #include "board.h"
 #include "fsl_component_serial_manager.h"
+#include "fsl_os_abstraction.h"
 
 #include "openthread-system.h"
 #include <utils/code_utils.h>
 #include <utils/uart.h>
 #include <openthread/tasklet.h>
 
-#ifndef OT_PLAT_UART_INSTANCE
-#define OT_PLAT_UART_INSTANCE 1
-#endif
-#ifndef OT_PLAT_UART_CLK_FREQ
-#define OT_PLAT_UART_CLK_FREQ BOARD_BT_UART_CLK_FREQ
-#endif
-#ifndef OT_PLAT_UART_BAUDRATE
-#define OT_PLAT_UART_BAUDRATE 115200
-#endif
-#ifndef OT_PLAT_UART_TYPE
-#define OT_PLAT_UART_TYPE (kSerialPort_Uart)
-#endif
+/* -------------------------------------------------------------------------- */
+/*                               Private macros                               */
+/* -------------------------------------------------------------------------- */
+
 #ifndef OT_PLAT_UART_SERIAL_MANAGER_RING_BUFFER_SIZE
 #define OT_PLAT_UART_SERIAL_MANAGER_RING_BUFFER_SIZE (128U)
 #endif
 #ifndef OT_PLAT_UART_RECEIVE_BUFFER_SIZE
 #define OT_PLAT_UART_RECEIVE_BUFFER_SIZE (128)
 #endif
+#ifndef OT_PLAT_UART_FLUSH_DELAY_MS
+#define OT_PLAT_UART_FLUSH_DELAY_MS 2U
+#endif
 
-static SERIAL_MANAGER_HANDLE_DEFINE(otCliSerialHandle);
-static SERIAL_MANAGER_WRITE_HANDLE_DEFINE(otCliSerialWriteHandle);
-static SERIAL_MANAGER_READ_HANDLE_DEFINE(otCliSerialReadHandle);
-static bool otPlatUartEnabled = false;
+/* -------------------------------------------------------------------------- */
+/*                             Private prototypes                             */
+/* -------------------------------------------------------------------------- */
+
 static void Uart_RxCallBack(void *pData, serial_manager_callback_message_t *message, serial_manager_status_t status);
 static void Uart_TxCallBack(void *pBuffer, serial_manager_callback_message_t *message, serial_manager_status_t status);
 
+/* -------------------------------------------------------------------------- */
+/*                               Private memory                               */
+/* -------------------------------------------------------------------------- */
+
+SERIAL_MANAGER_HANDLE_DEFINE(otCliSerialHandle);
+static SERIAL_MANAGER_WRITE_HANDLE_DEFINE(otCliSerialWriteHandle);
+static SERIAL_MANAGER_READ_HANDLE_DEFINE(otCliSerialReadHandle);
+static bool          otPlatUartEnabled = false;
+static volatile bool txDone            = false;
+
 uint8_t                          rxBuffer[OT_PLAT_UART_RECEIVE_BUFFER_SIZE];
-static serial_port_uart_config_t uartConfig = {.instance     = OT_PLAT_UART_INSTANCE,
-                                               .baudRate     = OT_PLAT_UART_BAUDRATE,
+static serial_port_uart_config_t uartConfig = {.instance     = BOARD_APP_UART_INSTANCE,
+                                               .baudRate     = BOARD_APP_UART_BAUDRATE,
                                                .parityMode   = kSerialManager_UartParityDisabled,
                                                .stopBitCount = kSerialManager_UartOneStopBit,
                                                .enableRx     = 1,
@@ -78,17 +89,33 @@ static serial_port_uart_config_t uartConfig = {.instance     = OT_PLAT_UART_INST
 
 static uint8_t                       s_ringBuffer[OT_PLAT_UART_SERIAL_MANAGER_RING_BUFFER_SIZE];
 static const serial_manager_config_t s_serialManagerConfig = {
-    .type           = OT_PLAT_UART_TYPE,
+    .type           = BOARD_APP_UART_TYPE,
     .ringBuffer     = &s_ringBuffer[0],
     .ringBufferSize = OT_PLAT_UART_SERIAL_MANAGER_RING_BUFFER_SIZE,
     .blockType      = kSerialManager_NonBlocking,
     .portConfig     = (serial_port_uart_config_t *)&uartConfig,
 };
 
+/* -------------------------------------------------------------------------- */
+/*                              Public functions                              */
+/* -------------------------------------------------------------------------- */
+
+void otPlatUartSetInstance(uint8_t newInstance)
+{
+    uartConfig.instance = newInstance;
+}
+
 otError otPlatUartEnable(void)
 {
-    otError error        = OT_ERROR_FAILED;
-    uartConfig.clockRate = OT_PLAT_UART_CLK_FREQ;
+    otError error = OT_ERROR_FAILED;
+
+    uartConfig.clockRate = BOARD_APP_UART_CLK_FREQ;
+
+    /*
+     * Make sure to disable interrupts while initializating the serial manager interface
+     * Some issues could happen if a UART IRQ is firing during serial manager initialization
+     */
+    OSA_InterruptDisable();
     do
     {
         if (SerialManager_Init((serial_handle_t)otCliSerialHandle, &s_serialManagerConfig) !=
@@ -110,6 +137,7 @@ otError otPlatUartEnable(void)
         otPlatUartEnabled = true;
         error             = OT_ERROR_NONE;
     } while (0);
+    OSA_InterruptEnable();
     return error;
 }
 
@@ -133,10 +161,22 @@ otError otPlatUartDisable(void)
 
 otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    otError error = OT_ERROR_NONE;
+    otError                 error = OT_ERROR_NONE;
+    serial_manager_status_t status;
+
     if (otPlatUartEnabled)
     {
-        SerialManager_WriteNonBlocking((serial_write_handle_t)otCliSerialWriteHandle, (uint8_t *)aBuf, aBufLength);
+        status =
+            SerialManager_WriteNonBlocking((serial_write_handle_t)otCliSerialWriteHandle, (uint8_t *)aBuf, aBufLength);
+        /* Currently this uart implementation doesn't support queuing TX operations
+         * According to CLI implementation, this scenario should never happen
+         * If it changes in the future, we shall handle the serial manager busy status */
+        assert(status != kStatus_SerialManager_Busy);
+
+        if (status != kStatus_SerialManager_Success)
+        {
+            error = OT_ERROR_FAILED;
+        }
     }
     else
     {
@@ -148,23 +188,26 @@ otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 
 otError otPlatUartFlush(void)
 {
-    return OT_ERROR_NOT_IMPLEMENTED;
-}
+    while (txDone == false)
+    {
+#if USE_RTOS || !defined(OSA_USED)
+        /* Wait for the serial manager task to empty the TX buffer */
+        OSA_TimeDelay(OT_PLAT_UART_FLUSH_DELAY_MS);
+#else
+#error On baremetal system, SerialManager TX callback must be called from IRQ context (OSA_USED not defined)
+#endif /* USE_RTOS || !defined(OSA_USED) */
+    }
 
-static void Uart_RxCallBack(void *pData, serial_manager_callback_message_t *message, serial_manager_status_t status)
-{
-    /* notify the main loop that a RX buffer is available */
-    otSysEventSignalPending();
-}
+    txDone = false;
 
-static void Uart_TxCallBack(void *pBuffer, serial_manager_callback_message_t *message, serial_manager_status_t status)
-{
-    otPlatUartSendDone();
+    return OT_ERROR_NONE;
 }
 
 void otPlatCliUartProcess(void)
 {
     uint32_t bytesRead = 0U;
+    uint32_t intMask;
+
     if ((otPlatUartEnabled) &&
         (SerialManager_TryRead((serial_read_handle_t)otCliSerialReadHandle, rxBuffer, OT_PLAT_UART_RECEIVE_BUFFER_SIZE,
                                &bytesRead) == kStatus_SerialManager_Success) &&
@@ -172,6 +215,14 @@ void otPlatCliUartProcess(void)
     {
         otPlatUartReceived(rxBuffer, bytesRead);
     }
+
+    intMask = DisableGlobalIRQ();
+    if (txDone == true)
+    {
+        otPlatUartSendDone();
+        txDone = false;
+    }
+    EnableGlobalIRQ(intMask);
 }
 
 /**
@@ -186,4 +237,21 @@ OT_TOOL_WEAK void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
 {
     OT_UNUSED_VARIABLE(aBuf);
     OT_UNUSED_VARIABLE(aBufLength);
+}
+
+/* -------------------------------------------------------------------------- */
+/*                              Private functions                             */
+/* -------------------------------------------------------------------------- */
+
+static void Uart_RxCallBack(void *pData, serial_manager_callback_message_t *message, serial_manager_status_t status)
+{
+    /* notify the main loop that a RX buffer is available */
+    otSysEventSignalPending();
+}
+
+static void Uart_TxCallBack(void *pBuffer, serial_manager_callback_message_t *message, serial_manager_status_t status)
+{
+    /* notify the main loop that the TX is done */
+    txDone = true;
+    otSysEventSignalPending();
 }

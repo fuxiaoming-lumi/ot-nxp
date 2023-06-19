@@ -69,7 +69,8 @@
 
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 #include "MWS.h"
-#include "MacDynamic.h"
+#include "MacSched.h"
+#include "dbg.h"
 #endif
 extern void BOARD_LedDongleToggle(void);
 extern void OSA_InterruptEnable(void);
@@ -146,6 +147,28 @@ extern void BOARD_GetCoexIoCfg(void **rfDeny, void **rfActive, void **rfStatus);
 /* RX was disabled due to no RX bufs */
 #define OT_RADIO_STATE_RX_DISABLED ((otRadioState)(OT_RADIO_STATE_INVALID - 1))
 
+#ifdef OT_RCP_TARGET
+/* How long to delay RX done in certain cases */
+#define DELAY_RX_DELTA 50000 /* usec */
+
+#define DELAY_RX_CH_REVERT 0 /* usec */
+#endif
+
+#ifdef ANTENNA_DIVERSITY_ENABLE
+/* Antenna Diversity feature requires enabling the ADO/ADE functions on the pins connected to the RF switch.
+ * The K32W0x1 provides an output (ADO) on one of DIO7, DIO9 or DIO19 and optionally its complement (ADE) on
+ * DIO6 that can be used to control an antenna switch; this enables antenna diversity to be implemented easily.
+ */
+#ifdef MAC_PROTO_TAG
+#undef vMMAC_EnableAntennaDiversity
+#undef vMMAC_DisableAntennaDiversity
+#define vMMAC_EnableAntennaDiversity vMMAC_EnableAntennaDiversity
+#define vMMAC_DisableAntennaDiversity vMMAC_DisableAntennaDiversity
+void vMMAC_EnableAntennaDiversity(void);
+void vMMAC_DisableAntennaDiversity(void);
+#endif
+#endif /* ANTENNA_DIVERSITY_ENABLE */
+
 /* Structures */
 typedef struct
 {
@@ -191,11 +214,13 @@ typedef enum
     kFcfTypeMacData      = 1,
     kFcfTypeAck          = 2,
     kFcfTypeMacCommand   = 3,
+    kFcfFramePending     = 4,
     kFcfMacFrameTypeMask = 7 << 0,
 
     kFcfAckRequest        = 1 << 5,
     kFcfPanidCompression  = 1 << 6,
     kFcfSeqNbSuppresssion = 1 << 8,
+    kFcfHasIe             = 1 << 9,
     kFcfDstAddrNone       = 0 << 10,
     kFcfDstAddrShort      = 2 << 10,
     kFcfDstAddrExt        = 3 << 10,
@@ -260,10 +285,15 @@ static otInstance           *sInstance;    /* Saved OT Instance */
 static int8_t                sTxPwrLevel;  /* Default power is 0 dBm */
 static uint8_t               sChannel = 0; /* Default channel - must be invalid so it
                                               updates the first time it is set */
-static bool_t sIsFpEnabled = TRUE;         /* Enable address match so FP=0 for SED.
-                                              Address match is disabled only when address table is full.
-                                              See SourceMatchController::AddEntry() */
-static uint16_t  sPanId;                   /* PAN ID currently in use */
+#ifdef OT_RCP_TARGET
+static uint8_t sPrevRxChannel = 0; /* Previous channel - must be
+                                      invalid so it is updated
+                                      the first time it is set */
+#endif                             /* OT_RCP_TARGET */
+static bool_t sIsFpEnabled = TRUE; /* Enable address match so FP=0 for SED.
+                                      Address match is disabled only when address table is full.
+                                      See SourceMatchController::AddEntry() */
+static uint16_t  sPanId;           /* PAN ID currently in use */
 static uint16_t  sShortAddress;
 static tsExtAddr sExtAddress;
 static uint64_t  sCustomExtAddr = 0;
@@ -310,6 +340,14 @@ static bool_t sAllowDeviceToSleep = TRUE;
 static bool isCoexInitialized;
 #endif
 
+#ifdef OT_RCP_TARGET
+static bool     bDelayRx     = FALSE;
+static uint32_t delayRxStart = 0;
+
+static bool     bRevertRxChannel     = FALSE;
+static uint32_t revertRxChannelStart = 0;
+#endif /* OT_RCP_TARGET */
+
 /* Stub functions for controlling low power mode */
 WEAK void App_AllowDeviceToSleep();
 WEAK void App_DisallowDeviceToSleep();
@@ -340,6 +378,13 @@ WEAK void BOARD_LedDongleToggle()
 {
 }
 
+#ifdef OT_RCP_TARGET
+static inline bool bIsDelayExpired(uint32_t start, uint32_t delay, uint32_t curTime)
+{
+    return !(curTime - start < delay);
+}
+#endif /* OT_RCP_TARGET */
+
 void App_SetCustomEui64(uint8_t *aIeeeEui64)
 {
     memcpy((uint8_t *)&sCustomExtAddr, aIeeeEui64, sizeof(sCustomExtAddr));
@@ -365,8 +410,17 @@ void K32WRadioInit(void)
 
 void K32WRadioProcess(otInstance *aInstance)
 {
-    K32WProcessRxFrames(aInstance);
+#ifdef OT_RCP_TARGET
+    if (bRevertRxChannel &&
+        bIsDelayExpired(revertRxChannelStart, DELAY_RX_CH_REVERT / US_PER_SYMBOL, u32MMAC_GetTime()))
+    {
+        otPlatRadioReceive(aInstance, sPrevRxChannel);
+    }
+#endif /* OT_RCP_TARGET */
+    /* Try to send first the TX frames to the host for RCP scenario. */
     K32WProcessTxFrame(aInstance);
+
+    K32WProcessRxFrames(aInstance);
 }
 
 otRadioState otPlatRadioGetState(otInstance *aInstance)
@@ -456,6 +510,11 @@ otError otPlatRadioEnable(otInstance *aInstance)
         vMMAC_SetRxShortAddr(sShortAddress);
     }
 
+#ifdef ANTENNA_DIVERSITY_ENABLE
+    /* Enabling this feature requires setting correct pin config to ADE/ADO pins */
+    vMMAC_EnableAntennaDiversity();
+#endif
+
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     /* Frame encryption is done in radio.c/OT stack, for now.
        Since there is no encryption support in MAC. */
@@ -477,6 +536,10 @@ otError otPlatRadioDisable(otInstance *aInstance)
     otError error = OT_ERROR_INVALID_STATE;
 
     otEXPECT(otPlatRadioIsEnabled(aInstance));
+
+#ifdef ANTENNA_DIVERSITY_ENABLE
+    vMMAC_DisableAntennaDiversity();
+#endif
 
     /* stop the radio so there are no pending interrupts */
     vMMAC_RadioToOffAndWait();
@@ -547,7 +610,14 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     while (v2MAC_is_rx_ongoing() && ((u32MMAC_GetTime() - txTime) < TX_TO))
     {
     }
-
+#ifdef OT_RCP_TARGET
+    /* disarm channel change mechanism */
+    if (bRevertRxChannel)
+    {
+        bRevertRxChannel     = FALSE;
+        revertRxChannelStart = 0;
+    }
+#endif
     /* stop the radio so there are no pending interrupts */
     vMMAC_RadioToOffAndWait();
 
@@ -560,8 +630,10 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
         sAllowDeviceToSleep = FALSE;
         RADIO_LOG("App_DisallowDeviceToSleep");
     }
-
-    sChannel = aChannel;
+#ifdef OT_RCP_TARGET
+    sPrevRxChannel =
+#endif
+        sChannel = aChannel;
     vMMAC_SetChannelAndPower(sChannel, sTxPwrLevel);
     K32WEnableReceive();
 
@@ -711,12 +783,18 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 
     /* wait for Rx to finish */
     txTime = u32MMAC_GetTime();
-
     while (v2MAC_is_rx_ongoing() && ((u32MMAC_GetTime() - txTime) < TX_TO))
     {
     }
     txTime = 0;
-
+#ifdef OT_RCP_TARGET
+    /* disarm channel change mechanism */
+    if (bRevertRxChannel)
+    {
+        bRevertRxChannel     = FALSE;
+        revertRxChannelStart = 0;
+    }
+#endif
     /* stop the radio so there are no pending interrupts */
     vMMAC_RadioToOffAndWait();
 
@@ -763,6 +841,10 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     /* set tx channel */
     if (sChannel != aFrame->mChannel)
     {
+#if OT_RCP_TARGET
+        /* preserve current RX channel */
+        sPrevRxChannel = sChannel;
+#endif
         /* after tx ends, rx on the same channel */
         sChannel = aFrame->mChannel;
 
@@ -981,17 +1063,50 @@ exit:
 otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aThreshold);
 
-    return OT_ERROR_NOT_IMPLEMENTED;
+    otError error = OT_ERROR_NONE;
+    uint8_t edThreshold;
+
+    if (aThreshold == NULL)
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+    else
+    {
+        /* MMAC CCA API returns ED, need to convert to dBm
+         * RSSI in K32W0 is 10 bit wide (8.2 format) with 0.25dBm steps.
+         * Need to shift to right by 2 to get the whole part.
+         */
+        edThreshold = u8MMAC_ReadCcaThreshold();
+        *aThreshold = (int8_t)(i16Radio_GetRSSIfromED(edThreshold) >> 2);
+    }
+
+    return error;
 }
 
 otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aThreshold);
 
-    return OT_ERROR_NOT_IMPLEMENTED;
+    otError error = OT_ERROR_NONE;
+    uint8_t edThreshold;
+
+    /* K32W0 RSSI between -100 and 10 dBm */
+    if ((aThreshold < -100) || (aThreshold > 10))
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+    else
+    {
+        /* MMAC CCA API requires ED, need to convert from dBm
+         * RSSI in K32W0 is 10 bit wide (8.2) with 0.25dBm steps.
+         * Need to left shift aThreshold by 2.
+         */
+        edThreshold = u8Radio_GetEDfromRSSI(((int16_t)aThreshold) << 2);
+        vMMAC_WriteCcaThreshold(edThreshold);
+    }
+
+    return error;
 }
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
@@ -1039,6 +1154,14 @@ static void K32WISR(uint32_t u32IntBitmap)
 
                 /* RX interrupt fired so it's safe to consume the frame */
                 K32WPushRxRingBuffer();
+
+#ifdef OT_RCP_TARGET
+                if (bRevertRxChannel)
+                {
+                    bRevertRxChannel     = FALSE;
+                    revertRxChannelStart = 0;
+                }
+#endif /* OT_RCP_TARGET */
             }
 
             /* restart RX */
@@ -1086,7 +1209,27 @@ static void K32WISR(uint32_t u32IntBitmap)
             {
                 vMMAC_SetChannelAndPower(sChannel, sTxPwrLevel);
             }
+#ifdef OT_RCP_TARGET
+            if ((sTxStatus == OT_ERROR_NONE) && otMacFrameIsVersion2015(&sAckOtFrame) &&
+                otMacFrameIsSecurityEnabled(&sAckOtFrame) &&
+                ((*(uint16_t *)&sAckOtFrame.mPsdu[kMacFcfLowOffset]) & kFcfHasIe) && !bDelayRx)
+            {
+                bDelayRx     = TRUE;
+                delayRxStart = 0;
+            }
 
+            /* If channels were just switched, then maybe I should prepare to go back */
+            if (sPrevRxChannel != sTxOtFrame.mChannel)
+            {
+                /* TODO: From George: revert condition below to make it easier to understand */
+                if ((sTxStatus != OT_ERROR_NONE) ||
+                    !(otMacFrameIsDataRequest(&sTxOtFrame) && (sAckOtFrame.mPsdu[kMacFcfLowOffset] & kFcfFramePending)))
+                {
+                    bRevertRxChannel     = TRUE;
+                    revertRxChannelStart = u32MMAC_GetTime();
+                }
+            }
+#endif /* OT_RCP_TARGET */
             BOARD_LedDongleToggle();
             sState = OT_RADIO_STATE_RECEIVE;
             K32WEnableReceive();
@@ -1199,6 +1342,73 @@ static bool K32WCheckIfFpRequired(tsPhyFrame *aRxFrame)
     return isFpRequired;
 }
 
+#ifdef OT_RCP_TARGET
+static inline bool bForwardRxFrameToHost(rxRingBufferEntry *rbe)
+{
+    bool bFwdRxF = TRUE;
+    /*
+     * Signaled from TX that we've got a pending TX Done with Ack to
+     * be reported to the host
+     */
+    if (bDelayRx == TRUE)
+    {
+        /* ... but we don't have a timestamp set yet */
+        if (delayRxStart == 0)
+        {
+            /*
+             * We received a frame that is delivered out of order (due to being
+             * a notification and being processed before confirmations),
+             * we will affect the security counter, leading to the failing of
+             * the TX confirmation (coming in later).
+             *
+             * Note: this filtering is quite coarse and might have some negative effects.
+             */
+            if (otMacFrameIsVersion2015(&rbe->of) && otMacFrameIsAckRequested(&rbe->of) &&
+                otMacFrameIsSecurityEnabled(&rbe->of) && (*(uint16_t *)&rbe->of.mPsdu[kMacFcfLowOffset] & kFcfHasIe))
+            {
+                /* Delay RX for some time to allow the host to "see" the previous TX */
+                delayRxStart = u32MMAC_GetTime();
+
+                /*
+                 * u32MMAC_GetTime() can return 0 (f.i. on wrap-around). Increment it by one here
+                 * so the condition above isn't triggered wrongly.
+                 */
+                if (delayRxStart == 0)
+                {
+                    delayRxStart++;
+                }
+                bFwdRxF = FALSE;
+            }
+            else
+            {
+                /* This is a corner case where before the corresponding response to the CSL TX there's another frame
+                   coming in. We don't want to delay that, so we will deliver it. */
+            }
+        }
+        else
+        {
+            if (bIsDelayExpired(delayRxStart, DELAY_RX_DELTA / US_PER_SYMBOL, u32MMAC_GetTime()))
+            {
+                /* Cool-off has elapsed, start delivering frames upstream */
+                bDelayRx = FALSE;
+            }
+            else
+            {
+                /* return FALSE, so we'll get out of the loop, nothing to do here... */
+                /*
+                 * Beware that this equates with a head of line blocking of all
+                 * the RX frames: after the first "culprit" is received, everything else
+                 * will be delayed.
+                 */
+                bFwdRxF = FALSE;
+            }
+        }
+    }
+
+    return bFwdRxF;
+}
+#endif
+
 /**
  * Process RX frames in process context and call the upper layer call-backs
  *
@@ -1210,6 +1420,12 @@ static void K32WProcessRxFrames(otInstance *aInstance)
 
     while ((rbe = K32WGetRxRingBuffer()) != NULL)
     {
+#ifdef OT_RCP_TARGET
+        if (bForwardRxFrameToHost(rbe) == FALSE)
+        {
+            break;
+        }
+#endif /* OT_RCP_TARGET */
         otPlatRadioReceiveDone(aInstance, &rbe->of, OT_ERROR_NONE);
 
         K32WPopRxRingBuffer();
@@ -1396,6 +1612,16 @@ void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCoun
     V2MMAC_SetMacFrameCounter(aMacFrameCounter);
 }
 
+void otPlatRadioSetMacFrameCounterIfLarger(otInstance *aInstance, uint32_t aMacFrameCounter)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    if (aMacFrameCounter > sMacFrameCounter)
+    {
+        otPlatRadioSetMacFrameCounter(aInstance, aMacFrameCounter);
+    }
+}
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 otError otPlatRadioEnableCsl(otInstance         *aInstance,
                              uint32_t            aCslPeriod,
@@ -1566,10 +1792,52 @@ bool otPlatRadioIsCoexEnabled(otInstance *aInstance)
 
 otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCoexMetrics)
 {
-    otError error = OT_ERROR_NONE;
+    otError            error = OT_ERROR_NONE;
+    struct sched_stats sched_stats;
+#if defined(gMWS_EnableCoexistenceStats_d) && (gMWS_EnableCoexistenceStats_d == 1)
+    mwsCoexStats_t coexStats;
+#endif
+    int ret = 0;
+
     OT_UNUSED_VARIABLE(aInstance);
 
     assert(aCoexMetrics != NULL);
+
+    memset(aCoexMetrics, 0, sizeof(otRadioCoexMetrics));
+#if defined(gMWS_EnableCoexistenceStats_d) && (gMWS_EnableCoexistenceStats_d == 1)
+    /*
+     * Retrieve the coex statistics. Since we don't have support for other types
+     * of statistics, the 15.4 specific ones, as well as the ones specific for
+     * scheduling will be printed here.
+     */
+    MWS_GetCoexStats(&coexStats);
+
+    aCoexMetrics->mNumTxRequest          = coexStats.numTxRequests;
+    aCoexMetrics->mNumTxGrantWait        = coexStats.numTxGrantWait;
+    aCoexMetrics->mNumTxGrantWaitTimeout = coexStats.numTxGrantWaitTimeout;
+
+    aCoexMetrics->mNumRxRequest        = coexStats.numRxRequests;
+    aCoexMetrics->mNumRxGrantImmediate = coexStats.numRxGrantImmediate;
+
+    aCoexMetrics->mNumRxGrantWait        = coexStats.numRxGrantWait;
+    aCoexMetrics->mNumRxGrantWaitTimeout = coexStats.numRxGrantWaitTimeout;
+#endif
+    /* print remaining statistics */
+    /* Get scheduler stats and dump them here */
+    ret = sched_get_stats(&sched_stats);
+    assert(ret == 0);
+
+    PRINTF("\n\n802.15.4 scheduler metrics\n");
+    PRINTF("--------------------------------------------------------\n");
+    PRINTF("\t802.15.4 TX request DENY:  %d\n", sched_stats.tx_req_deny);
+    PRINTF("\t802.15.4 TX request GRANT: %d\n", sched_stats.tx_req_grant);
+    PRINTF("\t802.15.4 RX request DENY:  %d\n", sched_stats.rx_req_deny);
+    PRINTF("\t802.15.4 RX request GRANT: %d\n", sched_stats.rx_req_grant);
+    PRINTF("\t802.15.4 releases:         %d\n", sched_stats.rel);
+    PRINTF("\t802.15.4 abort:            %d\n", sched_stats.abort);
+    PRINTF("\t802.15.4 to BLE switch:    %d\n", sched_stats.l542ble);
+    PRINTF("\tBLE to 802.15.4 switch:    %d\n", sched_stats.ble2l54);
+    PRINTF("--------------------------------------------------------\n\n");
 
     return error;
 }

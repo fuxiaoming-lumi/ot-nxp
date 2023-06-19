@@ -41,14 +41,43 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#if (defined(gClkUseFro32K) && (gClkUseFro32K == 1)) && (cPWR_FullPowerDownMode == 0)
+
+#if ((defined(gClkUseFro32K) && (gClkUseFro32K == 1)) || (defined(gPWR_CpuClk_48MHz) && (gPWR_CpuClk_48MHz == 1))) && \
+    (cPWR_FullPowerDownMode == 0)
 #include "TimersManager.h"
+#include <utils/code_utils.h>
 
 #ifndef FRO32K_CALIBRATION_LOOPS
 #define FRO32K_CALIBRATION_LOOPS 1000000 /* equates to ~ 100 s */
 #endif
 
-#endif /* (defined(gClkUseFro32K) && (gClkUseFro32K == 1)) && (cPWR_FullPowerDownMode == 0) */
+#ifndef FRO48M_CALIBRATION_LOOPS
+#define FRO48M_CALIBRATION_LOOPS 2000000 /* equates to ~ 200 s */
+#endif
+
+typedef void (*pFroCalibrationStart)(void);
+typedef uint32_t (*pFroCompleteCalibration)(void);
+
+typedef struct
+{
+    pFroCalibrationStart    pfFroCalibrationStart;
+    pFroCompleteCalibration pfFroCompleteCalibration;
+    uint32_t                calibrationLoops;
+} FroCalibrationFunctions_t;
+
+const FroCalibrationFunctions_t mFroCalibFuncTable[] = {
+#if (defined(gClkUseFro32K) && (gClkUseFro32K == 1))
+    {FRO32K_StartCalibration, FRO32K_CompleteCalibration, FRO32K_CALIBRATION_LOOPS},
+#endif
+#if (defined(gPWR_CpuClk_48MHz) && (gPWR_CpuClk_48MHz == 1))
+    {FRO48M_StartCalibration, FRO48M_CompleteCalibration, FRO48M_CALIBRATION_LOOPS},
+#endif
+};
+
+const uint8_t sizeOfFroCalibrationTable = otARRAY_LENGTH(mFroCalibFuncTable);
+
+#endif /* ((defined(gClkUseFro32K) && (gClkUseFro32K == 1)) || (defined(gPWR_CpuClk_48MHz) && \
+          (gPWR_CpuClk_48MHz == 1))) && (cPWR_FullPowerDownMode == 0) */
 
 otInstance           *sInstance;
 OT_TOOL_WEAK uint32_t gInterruptDisableCount = 0;
@@ -57,6 +86,7 @@ void hardware_init(void);
 #ifdef OT_PLAT_SPI_SUPPORT
 extern void BOARD_InitSPI1Pins(void);
 #endif
+void K32WFroCalibration(void);
 
 void otSysInit(int argc, char *argv[])
 {
@@ -102,17 +132,19 @@ void otSysDeinit(void)
 
 void otSysProcessDrivers(otInstance *aInstance)
 {
-    K32WRadioProcess(aInstance);
     K32WUartProcess();
+    K32WRadioProcess(aInstance);
     K32WAlarmProcess(aInstance);
 #ifdef OT_PLAT_SPI_SUPPORT
     K32WSpiSlaveProcess();
 #endif
-/* Do FRO32K calibration for non low power apps.
+/* Do FRO (32k and/or 48M) calibration for non low power apps.
    K32W0 SDK will handle the calibration if low power is enabled */
-#if (defined(gClkUseFro32K) && (gClkUseFro32K == 1)) && (cPWR_FullPowerDownMode == 0)
-    K32WFro32KCalibration();
-#endif /* defined(gClkUseFro32K) && (gClkUseFro32K==1) */
+#if ((defined(gClkUseFro32K) && (gClkUseFro32K == 1)) || (defined(gPWR_CpuClk_48MHz) && (gPWR_CpuClk_48MHz == 1))) && \
+    (cPWR_FullPowerDownMode == 0)
+    K32WFroCalibration();
+#endif /* ((defined(gClkUseFro32K) && (gClkUseFro32K == 1)) || (defined(gPWR_CpuClk_48MHz) && \
+          (gPWR_CpuClk_48MHz == 1))) && (cPWR_FullPowerDownMode == 0) */
 }
 
 WEAK void otSysEventSignalPending(void)
@@ -167,36 +199,52 @@ OT_TOOL_WEAK void OSA_InstallIntHandler(uint32_t IRQNumber, void (*handler)(void
 #endif
 }
 
-#if (defined(gClkUseFro32K) && (gClkUseFro32K == 1)) && (cPWR_FullPowerDownMode == 0)
+#if ((defined(gClkUseFro32K) && (gClkUseFro32K == 1)) || (defined(gPWR_CpuClk_48MHz) && (gPWR_CpuClk_48MHz == 1))) && \
+    (cPWR_FullPowerDownMode == 0)
 /*FUNCTION**********************************************************************
  *
- * Function Name : K32WFro32KCalibration
- * Description   : This function is used to trigger a calibration of the FRO32K
+ * Function Name : K32WFroCalibration
+ * Description   : This function is used to trigger a calibration of the enabled
+ *                 FROs (FRO32k and/or FRO48M)
  *
  *END**************************************************************************/
-void K32WFro32KCalibration(void)
+void K32WFroCalibration(void)
 {
-    static bool     bFro32KCalibStarted  = false;
+    /* Variable to store if calibration started */
+    static bool     bCalibStarted        = false;
     static uint32_t u32ProcessLoopCounts = 0;
+    static uint8_t  indexOfCalibration   = 0;
 
-    if (!bFro32KCalibStarted && (u32ProcessLoopCounts >= FRO32K_CALIBRATION_LOOPS))
+    if (!bCalibStarted && (u32ProcessLoopCounts >= mFroCalibFuncTable[indexOfCalibration].calibrationLoops))
     {
-        /* Start calibration here */
-        FRO32K_StartCalibration();
-        bFro32KCalibStarted = true;
+        mFroCalibFuncTable[indexOfCalibration].pfFroCalibrationStart();
+        /* Calibration started */
+        bCalibStarted = true;
     }
     else
     {
-        if (bFro32KCalibStarted)
+        if (bCalibStarted)
         {
             uint32_t u32FreqComp;
-            if ((u32FreqComp = FRO32K_CompleteCalibration()) != 0)
+
+            if ((u32FreqComp = mFroCalibFuncTable[indexOfCalibration].pfFroCompleteCalibration()) != 0)
             {
-                bFro32KCalibStarted  = false;
+                /* Reset calibration state */
+                bCalibStarted        = false;
                 u32ProcessLoopCounts = 0;
+                indexOfCalibration++;
+
+                if (indexOfCalibration >= sizeOfFroCalibrationTable)
+                {
+                    indexOfCalibration = 0;
+                }
             }
         }
-        u32ProcessLoopCounts++;
+        else
+        {
+            u32ProcessLoopCounts++;
+        }
     }
 }
-#endif /* defined(gClkUseFro32K) && (gClkUseFro32K==1) */
+#endif /* ((defined(gClkUseFro32K) && (gClkUseFro32K == 1)) || (defined(gPWR_CpuClk_48MHz) && \
+          (gPWR_CpuClk_48MHz == 1))) && (cPWR_FullPowerDownMode == 0) */

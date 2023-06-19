@@ -1,4 +1,4 @@
-# OpenThread on NXP RT1060 (host) + K32W061 (rcp) example (Experimental support)
+# OpenThread on NXP RT1060 (host) + transceiver (rcp) example
 
 This directory contains example platform drivers for the [NXP RT1060][rt1060]
 platform.
@@ -8,6 +8,12 @@ to support OpenThread. As a result, the example platform drivers do not
 necessarily highlight the platform's full capabilities.
 
 [rt1060]: https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/i-mx-rt-crossover-mcus/i-mx-rt1060-crossover-mcu-with-arm-cortex-m7-core:i.MX-RT1060
+
+## Configuration(s) supported
+
+Here are listed configurations that allow to support Openthread on RT1060:
+
+- RT1060 + K32W0
 
 ## Prerequisites
 
@@ -32,92 +38,102 @@ $ ./script/bootstrap
 
 [mcuxpresso ide]: https://www.nxp.com/support/developer-resources/software-development-tools/mcuxpresso-software-and-tools/mcuxpresso-integrated-development-environment-ide:MCUXpresso-IDE
 
-- Download [IMXRT1060 SDK 2.10.1](https://mcuxpresso.nxp.com/). Creating an
-  nxp.com account is required before being able to download the SDK. Once the
-  account is created, login and follow the steps for downloading
-  SDK_2.10.1_EVK-MIMXRT1060. In the SDK Builder UI selection you should select
-  the **FreeRTOS component**, the **BT/BLE component** and the **ARM GCC
-  Toolchain**.
+- Download the NXP MCUXpresso git SDK
+  and associated middleware from GitHub using the west tool.
 
-## Building the examples
-
-```bash
-$ cd <path-to-ot-nxp>
-$ export NXP_RT1060_SDK_ROOT=/path/to/previously/downloaded/SDK
-$ ./script/build_rt1060
+```
+bash
+$ cd third_party/rt1060_sdk/repo
+$ west init -l manifest --mf west.yml
+$ west update
 ```
 
-After a successful build, the ot-cli-rt1060 FreeRTOS version could be found in
-`build_rt1060` and include FTD (Full Thread Device).
+In case there are local modifications to the already installed git NXP SDK. Use the west forall command instead of the west init to reset the west workspace before running the west update command. Warning: all local changes will be lost after running this command.
 
-Note: FreeRTOS is required to be able to build the IMXRT1060 platform files.
+```
+bash
+$ cd third_party/rt1060_sdk/repo
+$ west forall -c "git reset --hard && git clean -xdf" -a
+```
 
-## Hardware requirements
+## Hardware requirements RT1060 + K32W0
 
 Host part:
 
-- 1 EVK-MIMXRT1060
+- 1 MIMXRT1060-EVKB
 
 Transceiver part:
 
 - 1 OM15076-3 Carrier Board (DK6 board)
 - 1 K32W061 Module to be plugged on the Carrier Board
 
-## Board settings
+Note : The pin connections between the boards are slightly different according
+to which version of the board is used (MIMXRT1060-EVKB or EVK-MIMXRT1060).The
+different settings are described below.
+
+### Board settings (Spinel over UART)
 
 The below table explains pin settings (UART settings) to connect the
-evkmimxrt1060 (host) to a k32w061 transceiver (rcp).
+evkbmimxrt1060 (host) to a k32w061 transceiver (rcp).
 
-| PIN NAME | DK6 (K32W061) | I.MXRT1060 | PIN NAME OF RT1060 | GPIO NAME OF RT1060 |
-| :------: | :-----------: | :--------: | :----------------: | :-----------------: |
-| UART_TXD |  PIO, pin 8   | J22, pin 1 |    LPUART3_RXD     |    GPIO_AD_B1_07    |
-| UART_RXD |  PIO, pin 9   | J22, pin 2 |    LPUART3_TXD     |    GPIO_AD_B1_06    |
-| UART_RTS |  PIO, pin 6   | J23, pin 3 |    LPUART3_CTS     |    GPIO_AD_B1_04    |
-| UART_CTS |  PIO, pin 7   | J23, pin 4 |    LPUART3_RTS     |    GPIO_AD_B1_05    |
+|    PIN NAME    | DK6 (K32W061) | I.MXRT1060-EVKB | I.MXRT1060-EVK | PIN NAME OF RT1060 | GPIO NAME OF RT1060 |
+| :------------: | :-----------: | :-------------: | :------------: | :----------------: | :-----------------: |
+|    UART_TXD    |  PIO, pin 8   |   J16, pin 1    |   J22, pin 1   |    LPUART3_RXD     |    GPIO_AD_B1_07    |
+|    UART_RXD    |  PIO, pin 9   |   J16, pin 2    |   J22, pin 2   |    LPUART3_TXD     |    GPIO_AD_B1_06    |
+|    UART_RTS    |  PIO, pin 6   |   J33, pin 3    |   J23, pin 3   |    LPUART3_CTS     |    GPIO_AD_B1_04    |
+|    UART_CTS    |  PIO, pin 7   |   J33, pin 4    |   J23, pin 4   |    LPUART3_RTS     |    GPIO_AD_B1_05    |
+|      GND       |   J3, pin 1   |   J32, pin 7    |   J25, pin 7   |         XX         |         XX          |
+|     RESET      |     RSTN      |   J17, pin 2    |   J24, pin 2   |   GPIO_AD_B0_02    |    GPIO_AD_B0_02    |
+| DIO5/ISP Entry |  PIO, pin 5   |   J33, pin 1    |   J23, pin 1   |   GPIO_AD_B1_10    |    GPIO_AD_B1_10    |
 
-The below picture shows pins connections.
+The below picture shows pins connections for the EVK-MIMXRT1060.
 
 ![rt1060_k32w061_pin_settings](../../../doc/img/imxrt1060/rt1060_k32w061_pin_settings.jpg)
 
-Note: it is recommended to first
-[flash the K32W061 OT-RCP transceiver image](#Flashing-the-K32W061-OT-RCP-transceiver-image)
-before connecting the DK6 to the IMXRT1060.
+### Generating a K32W0 OT-RCP transceiver image
 
-## Flash Binaries
+To target a RT1060 + K32W0 configuration, before building any Openthread host applications, it is required to generate a K32W0 RCP image.
+To know how to build an Openthread K32W0 application it is recommended to follow the [K32W061
+Readme][k32w061-readme].
 
-### Flashing the K32W061 OT-RCP transceiver image
+To avoid to have to rebuild all K32W061 application, it is recommended to build only the ot_rcp version using the below command:
 
-Connect to the DK6 board by plugging a mini-USB cable to the connector marked
-with _FTDI USB_. Also, make sure that jumpers jp4/JP7 are situated in the middle
-position (_JN UART0 - FTDI_).
-
-DK6 Flash Programmer can be found inside the [SDK][sdk_mcux] SDK_EVK-MIMXRT1060
-previously downloaded at path
-`<sdk_path>/middleware/wireless/ethermind/port/pal/mcux/bluetooth/controller/k32w061/JN-SW-4407-DK6-Flash-Programmer`.
-This is a Windows application that can be installed using the .exe file. Once
-the application is installed, the COM port for K32W061 must be identified:
-
-```
-C:\nxp\DK6ProductionFlashProgrammer>DK6Programmer.exe  --list
-Available connections:
-COM29
+```bash
+$ ./script/build_k32w061 ot_rcp_only_uart_flow_control
 ```
 
-The ot-rcp image has to be built. For that, follow the [K32W061
-Readme][k32w061-readme]. The new K32W061 ot-rcp binary will be located in
-`ot-nxp/build_k32w061/rcp_only_uart_flow_control/openthread/examples/apps/ncp/ot-rcp.bin`.
-
-Once the COM port is identified, the required binary can be flashed:
+After a successful build, application binaries will be generated in
+`ot-nxp/build_k32w061/rcp_only_uart_flow_control/bin` and would contain the file called "rcp_name.bin.h" that would be used by the RT1060 to download the K32W061 RCP firmware. In fact the RT1060 host application is in charge of storing the K32W0 firmware in its flash to be able to use the `The Over The Wire (OTW) protocol (over UART)` to download (at host startup) the k32w0 transceiver image from the host to the K32W0 internal flash. For more information on the k32w0 OTW protocol, user can consult the doxygen header of the file located in `<ot_nxp>/third_party/rt1060_sdk/repo/middleware/wireless/framework/OTW/k32w0_transceiver/fwk_otw.c`.
 
 [k32w061-readme]: ../../k32w0/k32w061/README.md
-
-```
-C:\nxp\DK6ProductionFlashProgrammer>DK6Programmer.exe -s COM29 -p "<ot_rcp_path>\ot-rcp.bin"
-```
-
 [sdk_mcux]: https://mcuxpresso.nxp.com/en/welcome
 
-### Flashing the IMXRT ot-cli-rt1060 host image using MCUXpresso IDE
+### Building the freeRTOS ot-cli example
+
+To target the RT1060 + K32W0 configuration, before building any Openthread host applications make sure to have correctly generated a K32W0 RCP binary.
+
+```bash
+$ cd <path-to-ot-nxp>
+$ ./script/build_rt1060
+```
+
+Note : The option `-DOT_NXP_TRANSCEIVER_BIN_PATH=/home/k32w0_rcp.h` could be added to indicate the path of the k32w0 transceiver to use. If not set, the binary file located in "<ot_nxp>/build_k32w061/rcp_only_uart_flow_control/bin/ot-rcp.elf.bin.h" will be used.
+
+```bash
+$ ./script/build_rt1060 -DOT_NXP_TRANSCEIVER_BIN_PATH=/home/k32w0_rcp.h
+```
+
+Note : If the EVK-MIMXRT1060 board is used instead of MIMXRT1060-EVKB, make sure
+to specify it using the following build command :
+
+```bash
+$ ./script/build_rt1060 -DEVK_RT1060_BOARD="evkmimxrt1060"
+```
+
+After a successful build, the ot-cli-rt1060.elf FreeRTOS version could be found in
+`build_rt1060/bin` and include support of the FTD (Full Thread Device) role.
+
+## Flashing the IMXRT ot-cli-rt1060 host image using MCUXpresso IDE
 
 In order to flash the application for debugging we recommend using
 [MCUXpresso IDE (version >= 11.3.1)](https://www.nxp.com/design/software/development-software/mcuxpresso-software-and-tools-/mcuxpresso-integrated-development-environment-ide:MCUXpresso-IDE?tab=Design_Tools_Tab).
@@ -156,7 +172,7 @@ existing debug configaturation.
 - Create a debug configuration for the hello word projet
 
 1. Click on "Import SDK example(s)..." on the bottom left window of MCUXpresso.
-2. Select the "evkmimxrt1060" SDK, click on "Next"
+2. Select the "evkbmimxrt1060" SDK, click on "Next"
 3. Expand "demo_apps", select the "hello_word" example, click on next and then
    finish.
 4. Build the imported "Hello word" application by right clicking on the project
@@ -172,8 +188,8 @@ existing debug configaturation.
    "Debug Configurations".
 2. Right click on the "Hello Word" debug configuration and click on "Duplicate".
 3. Rename the Duplicated debug configuration "ot-cli".
-4. In the "C/C++ Application", click on "Browse" and select the ot-cli-rt1060
-   app (should be located in "ot-nxp/build_rt1060/ot-cli-rt1060"). Then click on
+4. In the "C/C++ Application", click on "Browse" and select the ot-cli-rt1060.elf
+   app for the application targeted. Then click on
    Apply and Save.
 5. Click on "Organize Favorites".
    ![MCU_Sett](../../../doc/img/imxrt1060/organize_favorites.png)

@@ -1,0 +1,6 @@
+build*/
+node_modules
+package-lock.json
+.vscode
+.cache
+compile_commands.json

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2022, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -45,7 +45,7 @@
 extern "C" {
 #endif
 
-//#define OT_PLAT_DBG_LVL 4
+#define OT_PLAT_DBG_LVL 0
 
 #define OT_PLAT_DBG_LEVEL_NONE 0
 #define OT_PLAT_DBG_LEVEL_ERR 1
@@ -94,6 +94,18 @@ LOG_MODULE_DEFINE(LOG_MODULE_NAME, kLOG_LevelDebug);
 #endif
 
 /**
+ * This structure represents different CCA mode configurations before Tx.
+ */
+typedef struct otCCAModeConfig_tag
+{
+    uint8_t
+        mCcaMode; ///< CCA Mode type [CCA1=0x01, CCA2=0x02, CCA3=0x03[CCA1 AND CCA2], CCA3=4[CCA1 OR CCA2], NoCCA=0xFF].
+    uint8_t mCca1Threshold;      ///< Energy threshold for CCA Mode1.
+    uint8_t mCca2CorrThreshold;  ///< CCA Mode 2 Correlation Threshold.
+    uint8_t mCca2MinNumOfCorrTh; ///< CCA Mode 2 Threshold Number of Correlation Peaks.
+} otCCAModeConfig;
+
+/**
  * This function initializes the alarm service used by OpenThread.
  *
  */
@@ -120,10 +132,23 @@ void otPlatAlarmProcess(otInstance *aInstance);
 void otPlatRadioInit(void);
 
 /**
+ * Allows to initialize the platform spinel interface
+ * Only used in HOST+RCP configurations
+ *
+ */
+void otPlatRadioInitSpinelInterface(void);
+
+/**
  * This function deinitializes the radio service used by OpenThread.
  *
  */
 void otPlatRadioDeinit(void);
+
+/**
+ * This function reset the radio service used by OpenThread.
+ *
+ */
+otError otPlatResetOt(void);
 
 /**
  * This function process radio events.
@@ -145,6 +170,101 @@ void otPlatRandomInit(void);
  * This function deinitializes the ramdom service used by OpenThread
  */
 void otPlatRandomDeinit(void);
+
+/**
+ * Init the logging component
+ */
+void otPlatLogInit(void);
+
+/**
+ * Save settings in flash while in Idle
+ */
+void otPlatSaveSettingsIdle(void);
+
+/**
+ * This function performs a software reset on the platform, if otPlatReset() function
+ *  was previously called.
+ */
+void otPlatResetIdle(void);
+
+/**
+ * This function allows to send spinel set prop vendor cmd with uint8_t value to be set.
+ */
+otError otPlatRadioSendSetPropVendorUint8Cmd(uint32_t aKey, uint8_t value);
+
+/**
+ * This function allows to receive spinel get prop vendor cmd with uint8_t *value to be get.
+ */
+otError otPlatRadioSendGetPropVendorUint8Cmd(uint32_t aKey, uint8_t *Value);
+
+/**
+ * This function allows to send spinel set prop vendor cmd with uint16_t value to be set.
+ */
+otError otPlatRadioSendSetPropVendorUint16Cmd(uint32_t aKey, uint16_t value);
+
+/**
+ * This function allows to receive spinel get prop vendor cmd with uint16_t *value to be get.
+ */
+otError otPlatRadioSendGetPropVendorUint16Cmd(uint32_t aKey, uint16_t *value);
+
+/**
+ * This function allows to send spinel set prop vendor cmd with uint32_t value to be set.
+ */
+otError otPlatRadioSendSetPropVendorUint32Cmd(uint32_t aKey, uint32_t value);
+
+/**
+ * This function allows to receive spinel get prop vendor cmd with uint32_t *value to be get.
+ */
+otError otPlatRadioSendGetPropVendorUint32Cmd(uint32_t aKey, uint32_t *value);
+
+/**
+ * This function allows to send spinel set prop vendor cmd with uint64_t value to be set.
+ */
+otError otPlatRadioSendSetPropVendorUint64Cmd(uint32_t aKey, uint64_t value);
+
+/**
+ * This function allows to receive spinel get prop vendor cmd with uint64_t *value to be get.
+ */
+otError otPlatRadioSendGetPropVendorUint64Cmd(uint32_t aKey, uint64_t *value);
+
+/**
+ * This function allows to send spinel get prop vendor cmd.
+ *
+ */
+otError otPlatRadioSendGetPropVendorCmd(uint32_t aKey, const char *fwVersion, uint8_t fwVersionLen);
+
+/**
+ * Allows to set the UART instance for the ot cli
+ */
+void otPlatUartSetInstance(uint8_t newInstance);
+
+/**
+ * This function sends Vendor specific Manufactring commands to configure transceiver
+ *
+ */
+otError otPlatRadioMfgCommand(otInstance   *aInstance,
+                              uint32_t      aKey,
+                              uint8_t      *payload,
+                              const uint8_t payloadLenIn,
+                              uint8_t      *payloadLenOut);
+
+/**
+ * This function sends a Vendor specific command to configure the CCA
+ *
+ */
+otError otPlatRadioCcaConfigValue(uint32_t aKey, otCCAModeConfig *aCcaConfig, uint8_t aSetValue);
+
+/**
+ * This function is called from idle hook, likely for system idle operation such as flash operations
+ *
+ */
+void otSysRunIdleTask(void);
+
+/**
+ * This function displays SPI diagnostic statistics on OT CLI
+ *
+ */
+void otPlatRadioSpiDiag(void);
 
 #ifdef __cplusplus
 } // end of extern "C"
