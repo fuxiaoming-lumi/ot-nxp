@@ -99,12 +99,12 @@ target_link_libraries(${OT_PLATFORM_LIB}
         openthread-hdlc
         openthread-spinel-rcp
         openthread-platform
-        connfwk-config
         connfwk-FunctionLib
         connfwk-FileSystem
         connfwk-platform-${OT_NXP_PLATFORM}
         connfwk-platform-${OT_NXP_PLATFORM_FAMILY}
     PUBLIC
+        connfwk-config
         ${NXP_DRIVER_LIB}
         -T${PROJECT_SOURCE_DIR}/src/imx_rt/rt1170/RT1170_cm7.ld
         -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map,-print-memory-usage
