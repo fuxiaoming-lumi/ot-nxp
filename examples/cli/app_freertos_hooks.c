@@ -40,13 +40,20 @@
 
 #include "FreeRTOS.h"
 #include "assert.h"
+#include "fsl_common.h"
+#include "fwk_platform.h"
 #include "ot_platform_common.h"
 #include "task.h"
 
 #ifdef OT_APP_CLI_LOWPOWER_ADDON
 #include "PWR_Interface.h"
-#include "fsl_common.h"
 #endif
+
+/* -------------------------------------------------------------------------- */
+/*                               Private macros                               */
+/* -------------------------------------------------------------------------- */
+
+#define US_TO_TICK(us) (TickType_t)((uint64_t)(us) / ((uint64_t)portTICK_PERIOD_MS * (uint64_t)1000U))
 
 /* -------------------------------------------------------------------------- */
 /*                              Public functions                              */
@@ -54,7 +61,83 @@
 
 void vApplicationIdleHook(void)
 {
+    uint32_t   irqMask;
+    uint64_t   preOtIdleTaskTimeStampUs;
+    uint64_t   postOtIdleTaskTimeStampUs;
+    uint64_t   otIdleTaskDurationUs;
+    TickType_t otIdleTaskDurationTick;
+    TickType_t preOtIdleTaskTickCount;
+    TickType_t postOtIdleTaskTickCount;
+
+    /* The following implementation aims to mitigate the impact of saving to flash on the FreeRTOS time base
+     * When saving to flash, the whole system is blocked and depending on the flash and the operation it can take more
+     * than 1 tick. During this time, the FreeRTOS timebase is not incremented so the whole scheduled activity is
+     * shifted in time. This can cause problems with the FreeRTOS timers. FreeRTOS provides the API xTaskCatchUpTicks
+     * for this exact type of scenario.
+     * Here, we measure the time elapsed during the otSysRunIdleTask execution using SOC timers and we convert this
+     * time to ticks. The kernel is then notified with xTaskCatchUpTicks about those missing ticks.
+     * */
+    irqMask                  = DisableGlobalIRQ();
+    preOtIdleTaskTickCount   = xTaskGetTickCount();
+    preOtIdleTaskTimeStampUs = PLATFORM_GetTimeStamp();
+    EnableGlobalIRQ(irqMask);
+
+    /* We let the interrupts unmasked during the idle task to we can still get pre-empted by the OS and interrupts.
+     * We'll use the preOtIdleTaskTickCount and postOtIdleTaskTickCount to measure the ticks taken into account by
+     * FreeRTOS during this time, and substract it from the overall duration measured with the SOC timers. */
     otSysRunIdleTask();
+
+    irqMask                   = DisableGlobalIRQ();
+    postOtIdleTaskTickCount   = xTaskGetTickCount();
+    postOtIdleTaskTimeStampUs = PLATFORM_GetTimeStamp();
+
+    if (postOtIdleTaskTimeStampUs < preOtIdleTaskTimeStampUs)
+    {
+        /* Handle wrap */
+        otIdleTaskDurationUs = PLATFORM_GetMaxTimeStamp() - preOtIdleTaskTimeStampUs + postOtIdleTaskTimeStampUs;
+    }
+    else
+    {
+        otIdleTaskDurationUs = postOtIdleTaskTimeStampUs - preOtIdleTaskTimeStampUs;
+    }
+
+    otIdleTaskDurationTick = US_TO_TICK(otIdleTaskDurationUs);
+
+    if (otIdleTaskDurationTick > 0U)
+    {
+        TickType_t tmpTickCount;
+
+        /* The otSysRunIdleTask function was called with interrupts unmasked, meaning the systicks interrupts could
+         * execute and increase the tick count. We have to consider the number of tick counts taken into account by
+         * these interrupts and substract this duration from the overall duration measured with the SOC timers.
+         * If we don't do this, we may pass a higher tick count to xTaskCatchUpTicks than expected. */
+        if (postOtIdleTaskTickCount < preOtIdleTaskTickCount)
+        {
+            /* Tick count wrapped */
+            tmpTickCount = portMAX_DELAY - preOtIdleTaskTickCount + postOtIdleTaskTickCount;
+        }
+        else
+        {
+            tmpTickCount = postOtIdleTaskTickCount - preOtIdleTaskTickCount;
+        }
+
+        if (otIdleTaskDurationTick > tmpTickCount)
+        {
+            otIdleTaskDurationTick -= tmpTickCount;
+            /* This function corrects the tick count value after the application code has held
+             * interrupts disabled for an extended period resulting in tick interrupts having
+             * been missed.
+             *
+             * This function is similar to vTaskStepTick(), however, unlike
+             * vTaskStepTick(), xTaskCatchUpTicks() may move the tick count forward past a
+             * time at which a task should be removed from the blocked state.  That means
+             * tasks may have to be removed from the blocked state as the tick count is
+             * moved. */
+            (void)xTaskCatchUpTicks(otIdleTaskDurationTick);
+        }
+    }
+
+    EnableGlobalIRQ(irqMask);
 }
 
 void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
