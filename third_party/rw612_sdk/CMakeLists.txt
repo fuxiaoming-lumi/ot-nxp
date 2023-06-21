@@ -438,6 +438,8 @@ target_compile_definitions(${NXP_DRIVER_LIB}
     -DFFU_CNS_TX_PWR_TABLE_CALIBRATION=1
     -DIMU_TASK_PRIORITY=2 # OSA priority: configMAX_PRIORITIES - (osa_prio) - 2 = FreeRTOS priority
     -DgPlatformDisableBleLowPower_d=0 # Enable BLE/15.4 low power feature
+    LFS_CONFIG=fwk_lfs_config.h
+    LFS_THREADSAFE=1
 )
 
 if(OT_NXP_DEVICE_REVISION MATCHES "A0")
@@ -467,4 +469,7 @@ target_link_libraries(${NXP_DRIVER_LIB}
         ${NXP_BOARD_LIB} # board.h needed by firmware loader for flexspi flash
     PUBLIC
         freertos_kernel
+        # Dependencies to LFS_CONFIG
+        connfwk-config
+        connfwk-platform-${CONNFWK_PLATFORM}
 )
