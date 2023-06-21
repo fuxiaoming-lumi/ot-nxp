@@ -78,12 +78,12 @@ target_link_libraries(${OT_PLATFORM_LIB}
         openthread-hdlc
         openthread-spinel-rcp
         openthread-platform
-        connfwk-config
         connfwk-FunctionLib
         connfwk-FileSystem
         connfwk-platform-${OT_NXP_PLATFORM}
         connfwk-platform-${OT_NXP_PLATFORM_FAMILY}
     PUBLIC
+        connfwk-config
         ${OT_LWIP_LIBS}
         ${NXP_DRIVER_LIB}
         -T${PROJECT_SOURCE_DIR}/src/imx_rt/rt1060/RT1060.ld
