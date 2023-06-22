@@ -67,9 +67,9 @@ void vApplicationMallocFailedHook(void)
     assert(0);
 }
 
-#ifdef OT_APP_CLI_LOWPOWER_ADDON
 void vPortSuppressTicksAndSleep(TickType_t xExpectedIdleTime)
 {
+#ifdef OT_APP_CLI_LOWPOWER_ADDON
     bool     abortIdle = false;
     uint64_t expectedIdleTimeUs, actualIdleTimeUs;
 
@@ -89,5 +89,5 @@ void vPortSuppressTicksAndSleep(TickType_t xExpectedIdleTime)
 
     /* Exit from critical section */
     EnableGlobalIRQ(irqMask);
-}
 #endif
+}
