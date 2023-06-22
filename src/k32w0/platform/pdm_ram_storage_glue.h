@@ -66,6 +66,7 @@ ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize);
 #if PDM_SAVE_IDLE
 PDM_teStatus FS_eSaveRecordDataInIdleTask(uint16_t u16IdValue, ramBufferDescriptor *pvDataBuffer);
 void         FS_vIdleTask(uint8_t u8WritesAllowed);
+bool_t       idleMutexIsTaken();
 #endif /* PDM_SAVE_IDLE */
 
 #if PDM_SAVE_IDLE
