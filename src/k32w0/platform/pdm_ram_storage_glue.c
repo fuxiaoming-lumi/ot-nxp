@@ -66,6 +66,7 @@ static tsQueueEntry asQueue[MAX_QUEUE_SIZE];
 static uint8_t      u8QueueWritePtr;
 static uint8_t      u8QueueReadPtr;
 static osaMutexId_t asQueueMutex;
+static bool_t       asQueueMutexTaken;
 
 static uint8_t u8IncrementQueuePtr(uint8_t u8CurrentValue);
 
@@ -348,7 +349,11 @@ PDM_teStatus FS_eSaveRecordDataInIdleTask(uint16_t u16IdValue, ramBufferDescript
     }
 #endif
 
-    mutex_lock(asQueueMutex, osaWaitForever_c);
+    if (!OSA_InIsrContext())
+    {
+        mutex_lock(asQueueMutex, osaWaitForever_c);
+        asQueueMutexTaken = TRUE;
+    }
 
     /* Instead of updating PDM immediately we queue request until later. If
      * queue is full, performs first write in queue synchronously, to avoid
@@ -381,7 +386,11 @@ PDM_teStatus FS_eSaveRecordDataInIdleTask(uint16_t u16IdValue, ramBufferDescript
         u8QueueWritePtr = u8IncrementQueuePtr(u8QueueWritePtr);
     }
 
-    mutex_unlock(asQueueMutex);
+    if (!OSA_InIsrContext())
+    {
+        asQueueMutexTaken = FALSE;
+        mutex_unlock(asQueueMutex);
+    }
 
     return status;
 }
@@ -402,8 +411,10 @@ void FS_vIdleTask(uint8_t u8WritesAllowed)
     while ((u8QueueReadPtr != u8QueueWritePtr) && (u8WritesAllowed > 0))
     {
         mutex_lock(asQueueMutex, osaWaitForever_c);
+        asQueueMutexTaken = TRUE;
         memcpy(&currentEntry, &asQueue[u8QueueReadPtr], sizeof(tsQueueEntry));
-        u8QueueReadPtr = u8IncrementQueuePtr(u8QueueReadPtr);
+        u8QueueReadPtr    = u8IncrementQueuePtr(u8QueueReadPtr);
+        asQueueMutexTaken = FALSE;
         mutex_unlock(asQueueMutex);
 
         ramBuffer = currentEntry.pvDataBuffer;
@@ -444,6 +455,11 @@ void FS_vIdleTask(uint8_t u8WritesAllowed)
     {
         otPlatFree(buffer);
     }
+}
+
+bool_t idleMutexIsTaken()
+{
+    return asQueueMutexTaken;
 }
 
 #endif /* PDM_SAVE_IDLE */
