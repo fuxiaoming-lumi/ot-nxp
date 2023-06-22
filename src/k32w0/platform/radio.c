@@ -856,18 +856,8 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         eOptions |= E_MMAC_TX_USE_CCA;
     }
 
-    if (eOptions & E_MMAC_TX_USE_CCA)
-    {
-        if ((eOptions & E_MMAC_TX_DELAY_START) == E_MMAC_TX_DELAY_START)
-        {
-            /* No retransmissions, just 1 CCA */
-            vMMAC_SetTxParameters(1, 0, 0, 0);
-        }
-        else
-        {
-            vMMAC_SetTxParameters(1, MAC_TX_CSMA_MIN_BE, MAC_TX_CSMA_MAX_BE, aFrame->mInfo.mTxInfo.mMaxCsmaBackoffs);
-        }
-    }
+    /* No retransmissions, just 1 CCA */
+    vMMAC_SetTxParameters(1, 0, 0, 0);
 
     /* frame conversion. aOtFrame is sTxOtFrame */
     sTxMacFrame.u8PayloadLength = aFrame->mLength - kFcsSize;
@@ -958,7 +948,7 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    return OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF |
+    return OT_RADIO_CAPS_ACK_TIMEOUT |
            OT_RADIO_CAPS_SLEEP_TO_TX
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
            /* MAC doesn't support enc/dec. It uses K32WEncFrame() callback */
