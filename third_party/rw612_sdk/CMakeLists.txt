@@ -433,7 +433,7 @@ target_compile_definitions(${NXP_DRIVER_LIB}
     -DIMU_TASK_STACK_SIZE=1024
     -DgNvStorageIncluded_d=1
     -DAPP_FLEXSPI_AMBA_BASE=0x08000000
-    -DOT_PLAT_SAVE_NVM_DATA_ON_IDLE=0
+    -DOT_PLAT_SAVE_NVM_DATA_ON_IDLE=1
     -DgAspCapability_d=1
     -DFFU_CNS_TX_PWR_TABLE_CALIBRATION=1
     -DIMU_TASK_PRIORITY=2 # OSA priority: configMAX_PRIORITIES - (osa_prio) - 2 = FreeRTOS priority
