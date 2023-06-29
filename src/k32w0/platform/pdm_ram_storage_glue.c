@@ -398,14 +398,10 @@ rsError ramStorageEnsureBlockConsistency(ramBufferDescriptor *pBuffer, uint16_t 
         const uint16_t dummyLength =
             PDM_SEGMENT_SIZE - ((pBuffer->header.length % PDM_SEGMENT_SIZE) + sizeof(struct settingsBlock));
         struct settingsBlock dummyBlock = {.key = kRamBufferDummyKey, .length = dummyLength};
-        uint8_t             *dummyData  = (uint8_t *)otPlatCAlloc(1, dummyBlock.length);
-        otEXPECT_ACTION(dummyData != NULL, error = RS_ERROR_NO_BUFS);
 
         memcpy(&pBuffer->buffer[pBuffer->header.length], &dummyBlock, sizeof(dummyBlock));
-        memcpy(&pBuffer->buffer[pBuffer->header.length + sizeof(dummyBlock)], dummyData, dummyBlock.length);
+        memset(&pBuffer->buffer[pBuffer->header.length + sizeof(dummyBlock)], 0, dummyBlock.length);
         pBuffer->header.length += sizeof(dummyBlock) + dummyBlock.length;
-
-        otPlatFree(dummyData);
     }
 
 exit:
