@@ -62,15 +62,13 @@
  * If an application uses PDM in external flash, it's mandatory to define
  * PDM_SAVE_IDLE_PAGE_SIZE to the external flash page size.
  */
-#ifndef PDM_SAVE_IDLE_PAGE_SIZE
+#ifndef PDM_EXT_FLASH
 #include "fsl_flash.h"
 #define PDM_SAVE_IDLE_PAGE_SIZE FLASH_PAGE_SIZE
 #else
 #include "Eeprom.h"
-#if PDM_SAVE_IDLE_PAGE_SIZE != gEepromParams_SectorSize_c
-#error "PDM_SAVE_IDLE_PAGE_SIZE should be the size of external flash page (gEepromParams_SectorSize_c)"
-#endif
-#endif // PDM_SAVE_IDLE_PAGE_SIZE
+#define PDM_SAVE_IDLE_PAGE_SIZE gEepromParams_SectorSize_c
+#endif // PDM_EXT_FLASH
 
 /* Segment data size is: PDM page size - size of internal header (D_PDM_NVM_SEGMENT_HEADER_SIZE).
  * Subtract 64 to have more margin. */
@@ -199,7 +197,8 @@ static void loadData(uint16_t id, uint16_t nbIds, ramBufferDescriptor *handle)
 
     for (uint16_t i = id; i < id + nbIds; i++)
     {
-        status = PDM_eReadDataFromRecord(i, handle->buffer + handle->header.length, handle->header.maxLength, &length);
+        status = PDM_eReadDataFromRecord(i, handle->buffer + handle->header.length,
+                                         handle->header.maxLength - handle->header.length, &length);
         if (PDM_E_STATUS_OK == status)
         {
             handle->header.length += length;
