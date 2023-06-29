@@ -88,6 +88,9 @@ void otSysInit(int argc, char *argv[])
     multicore_init();
 #endif
 
+    /* Must be initialized before spinel interface in case it deschedules and calls timestamp API */
+    PLATFORM_InitTimeStamp();
+
     otPlatRadioInitSpinelInterface();
     PLATFORM_InitOt();
 
