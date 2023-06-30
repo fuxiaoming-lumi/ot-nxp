@@ -154,6 +154,26 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
+ *
+ * The maximum number of children.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
+#define OPENTHREAD_CONFIG_MLE_MAX_CHILDREN 64
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD
+ *
+ * The maximum number of supported IPv6 address registrations per child.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD
+#define OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD 16
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
  *
  * Define to 1 to enable DHCPv6 Server support.
@@ -442,6 +462,16 @@
  */
 #ifndef OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US
 #define OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US 9000
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_IP6_FRAGMENTATION
+ *
+ * Define as 1 to enable IPv6 Fragmentation support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+#define OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE 1
 #endif
 
 #endif // OT_RT_OPENTHREAD_CORE_RT_CONFIG_H_
