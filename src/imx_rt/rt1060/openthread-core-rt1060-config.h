@@ -134,6 +134,26 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
+ *
+ * The maximum number of children.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
+#define OPENTHREAD_CONFIG_MLE_MAX_CHILDREN 64
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD
+ *
+ * The maximum number of supported IPv6 address registrations per child.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD
+#define OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD 16
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
  *
  * Define to 1 to enable DHCPv6 Server support.
@@ -391,9 +411,12 @@
  * time sync. The host will recalculate the time offset between host and RCP
  * every interval.
  *
+ * Frequent time re-sync with the RCP is required to allow to compensate
+ * the freeRTOS time drift that may happen when flash operations are done.
+ *
  */
 #ifndef OPENTHREAD_POSIX_CONFIG_RCP_TIME_SYNC_INTERVAL
-#define OPENTHREAD_POSIX_CONFIG_RCP_TIME_SYNC_INTERVAL (60 * 1000 * 1000)
+#define OPENTHREAD_POSIX_CONFIG_RCP_TIME_SYNC_INTERVAL (1 * US_PER_S)
 #endif
 
 /**
@@ -402,9 +425,33 @@
  * Define to 1 to enable MAC filter support.
  *
  */
-
 #ifndef OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 #define OPENTHREAD_CONFIG_MAC_FILTER_ENABLE 1
+#endif
+
+/* Should cover Tx tune time (warm-up) + encryption time +
+   us timer inaccuracy (it uses ticks ~= 30.5us) + RCP communication overhead */
+/**
+ * @def OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US
+ *
+ * Define how many microseconds ahead should MAC deliver CSL frame to SubMac.
+ *
+ * This new value takes into account the time requires to send the spinel msg from
+ * the host to the transceiver + a potential margin.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US
+#define OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US 9000
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_IP6_FRAGMENTATION
+ *
+ * Define as 1 to enable IPv6 Fragmentation support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+#define OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE 1
 #endif
 
 #endif // OT_RT_OPENTHREAD_CORE_RT_CONFIG_H_
