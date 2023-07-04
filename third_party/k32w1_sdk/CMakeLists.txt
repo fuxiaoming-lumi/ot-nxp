@@ -252,6 +252,16 @@ if (OT_RCP_UART_DMA)
              -DOT_APP_SERIAL_PORT_USE_DMA=1
              -DLPUART_RING_BUFFER_SIZE=1024
     )
+
+    if (OT_ZB_SUPPORT)
+        list(REMOVE_ITEM OT_PLATFORM_DEFINES
+            "SERIAL_MANAGER_NON_BLOCKING_MODE=1"
+        )
+        target_compile_definitions(${NXP_DRIVER_LIB}
+            PUBLIC
+                -DDEBUG_CONSOLE_TRANSFER_NON_BLOCKING=1
+        )
+    endif()
 endif()
 
 target_compile_definitions(${NXP_DRIVER_LIB}
