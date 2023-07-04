@@ -241,10 +241,6 @@ if (OT_RCP_FLOW_CONTROL)
 endif()
 
 if (OT_RCP_UART_DMA)
-#    list(APPEND OT_PLATFORM_DEFINES
-#        "HAL_UART_DMA_ENABLE=1"
-#        "SERIAL_PORT_TYPE_UART_DMA=1"
-#    )
     target_compile_definitions(${NXP_DRIVER_LIB}
         PUBLIC
              -DSERIAL_PORT_TYPE_UART_DMA=1
