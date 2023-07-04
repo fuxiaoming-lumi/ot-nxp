@@ -33,6 +33,7 @@
  */
 
 #include "fsl_os_abstraction.h"
+#include "fwk_platform.h"
 #include "fwk_platform_ot.h"
 #include "ot_platform_common.h"
 #include <stdlib.h>
