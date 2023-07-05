@@ -45,6 +45,7 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/platform)
 
 include(utils)
 include(${OT_NXP_PLATFORM} OPTIONAL)
+include(options)
 
 otnxp_git_version(OT_PACKAGE_VERSION)
 set(OT_PACKAGE_VERSION "${OT_PACKAGE_VERSION}" CACHE STRING "")
@@ -71,8 +72,6 @@ endif()
 add_subdirectory(openthread)
 
 if(OT_APP_BR_FREERTOS)
-    set(OT_NXP_LWIP ON)
-
     target_compile_definitions(ot-config INTERFACE
         -DOPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE=1
     )
