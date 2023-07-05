@@ -1,0 +1,90 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            // This debug configuration interacts with CMake Tools extension
+            // It will retrieve the selected launch target path as the executable to flash and debug.
+            // This config relies on cortex-debug extension which enables debugging on embedded targets with J-Link.
+            // At launch, VS Code will take the user input to select the platform and the physical board to debug.
+            "name": "OT-NXP Debug",
+            "type": "cortex-debug",
+            "request": "launch",
+            "executable": "${command:cmake.launchTargetPath}",
+            "cwd": "${workspaceFolder}",
+            "runToEntryPoint": "main",
+            "servertype": "jlink",
+            "device" : "${input:JLinkDevice}",
+            "interface": "${input:JLinkInterface}",
+            "serialNumber": "${input:JLinkSerial}",
+            "rtos": "FreeRTOS",
+            "svdFile": "${input:SvdFile}",
+        },
+    ],
+    "inputs": [
+        {
+            "id": "JLinkDevice",
+            "type": "command",
+            "command": "extension.commandvariable.file.content", // requires following extension: rioj7.command-variable
+            "args": {
+                "fileName": "${workspaceFolder}/.vscode/configs/ot-platforms.json",
+                "json": "content.${pickStringRemember:platform}.JLinkDevice",
+                "default": "",
+                "pickStringRemember": {
+                    "platform": {
+                        "description": "Select the OT-NXP Platform:",
+                        "default": "Unknown",
+                        "options": [
+                            "RW612",
+                            "RW612_JTAG",
+                        ],
+                        "key": "otPlatform"
+                    }
+                },
+            }
+        },
+        {
+            "id": "JLinkInterface",
+            "type": "command",
+            "command": "extension.commandvariable.file.content", // requires following extension: rioj7.command-variable
+            "args": {
+                "fileName": "${workspaceFolder}/.vscode/configs/ot-platforms.json",
+                "json": "content.${remember:otPlatform}.JLinkInterface",
+                "default": "",
+            }
+        },
+        {
+            "id": "SvdFile",
+            "type": "command",
+            "command": "extension.commandvariable.file.content", // requires following extension: rioj7.command-variable
+            "args": {
+                "fileName": "${workspaceFolder}/.vscode/configs/ot-platforms.json",
+                "json": "content.${remember:otPlatform}.svdFile",
+                "default": "",
+            }
+        },
+        {
+            /* This command allows the user to select a JLink serial number based on a nickname
+             * It makes it easier to select a device when starting a debug session
+             * The file jlink_setup.cfg must be created and filled by the user, using the following pattern:
+             * nickname=serial_number
+             * see jlink_setup_example.cfg as an example
+             * */
+            "id": "JLinkSerial",
+            "type": "command",
+            "command": "extension.commandvariable.pickStringRemember", // requires following extension: augustocdias.tasks-shell-input
+            "args": {
+                "description": "Select the JLink serial to debug:",
+                "default": "Unknown",
+                "fileName": "${workspaceFolder}/.vscode/configs/jlink_setup.cfg",
+                "pattern": {
+                    "regexp": "^(.*)=(.*\\d)",
+                    "label": "$1",
+                    "value": "$2"
+                }
+            }
+        },
+    ]
+}

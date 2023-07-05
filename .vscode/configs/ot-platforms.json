@@ -1,0 +1,12 @@
+{
+    "RW612": {
+        "JLinkDevice": "RW612",
+        "JLinkInterface": "swd",
+        "svdFile": "${workspaceFolder}/.vscode/configs/svd/RW612.xml"
+    },
+    "RW612_JTAG": {
+        "JLinkDevice": "RW612",
+        "JLinkInterface": "jtag",
+        "svdFile": "${workspaceFolder}/.vscode/configs/svd/RW612.xml"
+    }
+}
