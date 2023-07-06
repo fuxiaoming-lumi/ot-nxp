@@ -131,9 +131,14 @@ set(K32W1_SDK_SOURCES
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/secure-subsystem/port/kw45_k4w1/sss_init.c
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/secure-subsystem/port/kw45_k4w1/sss_aes.c
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/secure-subsystem/port/kw45_k4w1/sss_ccm.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/ieee-802.15.4/utils/dbg_io.c
     ${PROJECT_SOURCE_DIR}/third_party/k32w1_sdk/board_lp.c
 )
+
+if (NOT SDK_RELEASE)
+    list(APPEND K32W1_SDK_SOURCES
+        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/ieee-802.15.4/utils/dbg_io.c
+    )
+endif()
 
 if (USE_NBU)
     if (SDK_RELEASE)

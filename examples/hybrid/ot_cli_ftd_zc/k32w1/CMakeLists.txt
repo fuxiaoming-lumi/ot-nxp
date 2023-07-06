@@ -27,7 +27,7 @@
 #
 
 if (SDK_RELEASE)
-    message(FATAL_ERROR "EXAMPLE_BASE_DIR for SDK_RELEASE")
+    set(EXAMPLE_BASE_DIR $ENV{NXP_K32W1_SDK_ROOT}/boards/k32w148evk/wireless_examples/zigbee/coordinator/bm)
 else()
     set(EXAMPLE_BASE_DIR $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/examples/zigbee_coordinator/src)
 endif()
@@ -68,7 +68,12 @@ target_include_directories(nxp-k32w1-zigbee-gen
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
 
+    ${EXAMPLE_BASE_DIR}
+
     $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/internal
+
+    $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480
+
     $ENV{NXP_K32W1_SDK_ROOT}/CMSIS/Core/Include
 
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/SecLib
@@ -140,6 +145,10 @@ target_compile_definitions(nxp-k32w1-zigbee
 target_compile_options(nxp-k32w1-zigbee-plat
     PRIVATE
         -include ${CMAKE_CURRENT_SOURCE_DIR}/app_preinclude.h
+)
+
+target_include_directories(nxp-k32w1-zigbee-plat PUBLIC
+    ${EXAMPLE_BASE_DIR}
 )
 
 target_include_directories(nxp-k32w1-zigbee PUBLIC
