@@ -94,7 +94,7 @@
                 "default": "Unknown",
                 "fileName": "${workspaceFolder}/.vscode/configs/jlink_setup.cfg",
                 "pattern": {
-                    "regexp": "^(.*)=(.*\\d)",
+                    "regexp": "^([^#].*)=(.*\\d)",
                     "label": "$1",
                     "value": "$2"
                 }
