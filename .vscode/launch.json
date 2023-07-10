@@ -9,7 +9,7 @@
             // It will retrieve the selected launch target path as the executable to flash and debug.
             // This config relies on cortex-debug extension which enables debugging on embedded targets with J-Link.
             // At launch, VS Code will take the user input to select the platform and the physical board to debug.
-            "name": "OT-NXP Debug",
+            "name": "Debug CMake Target",
             "type": "cortex-debug",
             "request": "launch",
             "executable": "${command:cmake.launchTargetPath}",
@@ -33,7 +33,7 @@
             "type": "command",
             "command": "extension.commandvariable.file.content", // requires following extension: rioj7.command-variable
             "args": {
-                "fileName": "${workspaceFolder}/.vscode/configs/ot-platforms.json",
+                "fileName": "${workspaceFolder}/.vscode/configs/platforms-config.json",
                 "json": "content.${pickStringRemember:platform}.JLinkDevice",
                 "default": "",
                 "pickStringRemember": {
@@ -44,7 +44,7 @@
                             "RW612",
                             "RW612_JTAG",
                         ],
-                        "key": "otPlatform"
+                        "key": "Platform"
                     }
                 },
             }
@@ -54,8 +54,8 @@
             "type": "command",
             "command": "extension.commandvariable.file.content", // requires following extension: rioj7.command-variable
             "args": {
-                "fileName": "${workspaceFolder}/.vscode/configs/ot-platforms.json",
-                "json": "content.${remember:otPlatform}.JLinkInterface",
+                "fileName": "${workspaceFolder}/.vscode/configs/platforms-config.json",
+                "json": "content.${remember:Platform}.JLinkInterface",
                 "default": "",
             }
         },
@@ -64,8 +64,8 @@
             "type": "command",
             "command": "extension.commandvariable.file.content", // requires following extension: rioj7.command-variable
             "args": {
-                "fileName": "${workspaceFolder}/.vscode/configs/ot-platforms.json",
-                "json": "content.${remember:otPlatform}.svdFile",
+                "fileName": "${workspaceFolder}/.vscode/configs/platforms-config.json",
+                "json": "content.${remember:Platform}.svdFile",
                 "default": "",
             }
         },
@@ -74,8 +74,8 @@
             "type": "command",
             "command": "extension.commandvariable.file.content", // requires following extension: rioj7.command-variable
             "args": {
-                "fileName": "${workspaceFolder}/.vscode/configs/ot-platforms.json",
-                "json": "content.${remember:otPlatform}.speed",
+                "fileName": "${workspaceFolder}/.vscode/configs/platforms-config.json",
+                "json": "content.${remember:Platform}.speed",
                 "default": "4000",
             }
         },
