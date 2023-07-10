@@ -26,6 +26,27 @@
                 "${input:Speed}"
             ]
         },
+        {
+            // This debug configuration interacts with CMake Tools extension
+            // It will retrieve the selected launch target path as the executable to flash and debug.
+            // This config relies on cortex-debug extension which enables debugging on embedded targets with J-Link.
+            // At launch, VS Code will take the user input to select the platform and the physical board to debug.
+            "name": "Attach CMake Target",
+            "type": "cortex-debug",
+            "request": "attach",
+            "executable": "${command:cmake.launchTargetPath}",
+            "cwd": "${workspaceFolder}",
+            "servertype": "jlink",
+            "device" : "${input:JLinkDevice}",
+            "interface": "${input:JLinkInterface}",
+            "serialNumber": "${input:JLinkSerial}",
+            "rtos": "FreeRTOS",
+            "svdFile": "${input:SvdFile}",
+            "serverArgs": [
+                "-speed",
+                "${input:Speed}"
+            ]
+        },
     ],
     "inputs": [
         {
