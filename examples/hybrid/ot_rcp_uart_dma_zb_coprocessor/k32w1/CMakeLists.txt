@@ -53,21 +53,13 @@ add_executable(ot-rcp-uart-dma-zb-coprocessor-${OT_NXP_PLATFORM}
 
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/examples/zb_common/app_zigbee_config.c
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/examples/zb_common/app_uart.c
-    
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/platform/uart_hal.c
 
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/port_JN518x.c
-    
+
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/app_zps_link_keys.c
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/appZdpExtraction.c
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/appZpsBeaconHandler.c
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/appZpsExtendedDebug.c
-
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/platform/glue.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/platform/leds.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/PDM/PDM_adapter.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/SecLib/SecLib_.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/SecLib/aes_mmo.c
 
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/examples/zb_common/app_leds.c
 )
@@ -106,11 +98,11 @@ target_compile_definitions(nxp-k32w1-zigbee-gen
 )
 
 add_custom_command(OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/pdum_gen.c" "${CMAKE_CURRENT_SOURCE_DIR}/pdum_gen.h" "${CMAKE_CURRENT_SOURCE_DIR}/pdum_apdu.S"
-    COMMAND "$ENV{PDUMCONFIG}" -z coordinator -e ENDIAN -f ${ZPSCFG} -o ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND sh "$ENV{PDUMCONFIG}" -z coordinator -e ENDIAN -f ${ZPSCFG} -o ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 add_custom_command(OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/zps_gen.c" "${CMAKE_CURRENT_SOURCE_DIR}/zps_gen.h"
-    COMMAND "$ENV{ZPSCONFIG}" -n coordinator -t JN518x -l $ENV{ZPS_NWK_LIB} -a $ENV{ZPS_APL_LIB} -e LITTLE_ENDIAN -f ${ZPSCFG} -o ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND sh "$ENV{ZPSCONFIG}" -n coordinator -t JN518x -l $ENV{ZPS_NWK_LIB} -a $ENV{ZPS_APL_LIB} -e LITTLE_ENDIAN -f ${ZPSCFG} -o ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 target_include_directories(ot-rcp-uart-dma-zb-coprocessor-${OT_NXP_PLATFORM} PRIVATE

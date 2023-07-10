@@ -54,12 +54,6 @@ add_executable(ot-cli-ftd-zc-${OT_NXP_PLATFORM}
 
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/port_JN518x.c
 
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/platform/glue.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/platform/leds.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/PDM/PDM_adapter.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/SecLib/SecLib_.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/SecLib/aes_mmo.c
-
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/examples/zb_common/app_leds.c
 )
 

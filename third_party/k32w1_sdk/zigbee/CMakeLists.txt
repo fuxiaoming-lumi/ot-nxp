@@ -158,6 +158,16 @@ add_library(nxp-k32w1-zigbee
 
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/BDB/Source/NwkSteering/bdb_ns.c
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/BDB/Source/NwkFormation/bdb_nf.c
+
+        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/platform/glue.c
+        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/platform/leds.c
+        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/platform/uart_hal.c
+
+        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/PDM/PDM_adapter.c
+        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/PWRM/PWRM_adapter.c
+
+        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/SecLib/SecLib_.c
+        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/SecLib/aes_mmo.c
 )
 
 target_compile_definitions(nxp-k32w1-zigbee
