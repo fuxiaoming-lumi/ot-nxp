@@ -56,7 +56,7 @@
 
 #define MAX_SOCKETS_TCP 8
 #define MAX_LISTENING_SOCKETS_TCP 4
-#define MAX_SOCKETS_UDP 6
+#define MAX_SOCKETS_UDP 10
 #define TCP_SND_BUF_COUNT 2
 #define TCPIP_STACK_TX_HEAP_SIZE 0
 #define LWIP_COMPAT_SOCKETS 2
@@ -531,4 +531,9 @@
 u32_t lwip_rand(void);
 #define LWIP_RAND() lwip_rand()
 #endif
+
+#define LWIP_NUM_NETIF_CLIENT_DATA 10
+#define LWIP_TCPIP_CORE_LOCKING 1
+#define LWIP_NETCONN_SEM_PER_THREAD 0
+#define LWIP_NETCONN_FULLDUPLEX 0
 #endif /* __LWIPOPTS_H__ */
