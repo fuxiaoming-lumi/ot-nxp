@@ -21,6 +21,10 @@
             "serialNumber": "${input:JLinkSerial}",
             "rtos": "FreeRTOS",
             "svdFile": "${input:SvdFile}",
+            "serverArgs": [
+                "-speed",
+                "${input:Speed}"
+            ]
         },
     ],
     "inputs": [
@@ -63,6 +67,16 @@
                 "fileName": "${workspaceFolder}/.vscode/configs/ot-platforms.json",
                 "json": "content.${remember:otPlatform}.svdFile",
                 "default": "",
+            }
+        },
+        {
+            "id": "Speed",
+            "type": "command",
+            "command": "extension.commandvariable.file.content", // requires following extension: rioj7.command-variable
+            "args": {
+                "fileName": "${workspaceFolder}/.vscode/configs/ot-platforms.json",
+                "json": "content.${remember:otPlatform}.speed",
+                "default": "4000",
             }
         },
         {
