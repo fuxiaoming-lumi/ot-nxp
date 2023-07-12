@@ -152,6 +152,15 @@ static void UDPClientDual(void);
 
 static void UDPClientTradeOff(void);
 
+#ifdef DISABLE_TCPIP_INIT
+/* Disable Power Manager tickless IDLE when we are running iperf */
+extern void APP_SetTicklessIdle(bool enable);
+
+static bool iperf_need_enable_tickless_idle(void *arg, enum lwiperf_report_type report_type);
+
+static void iperf_disable_tickless_hook(bool disable);
+#endif
+
 /* -------------------------------------------------------------------------- */
 /*                               Private memory                               */
 /* -------------------------------------------------------------------------- */
@@ -559,6 +568,15 @@ static void iperf_test_start(void *arg)
         ctx->iperf_session = NULL;
     }
 
+#ifdef DISABLE_TCPIP_INIT
+    /* Disable tickless idle when running iperf test */
+    if (ctx->server_mode)
+    {
+        otCliOutputFormat("Please use iperf -a to close iperf after iperf server mode done\r\n");
+    }
+    iperf_disable_tickless_hook(true);
+#endif
+
     if (!(ctx->tcp) && ctx->client_type == LWIPERF_DUAL)
     {
         /* Reducing udp Tx timer interval for rx to be served */
@@ -574,11 +592,11 @@ static void iperf_test_start(void *arg)
     {
         if (ctx->tcp)
         {
-            ctx->iperf_session = lwiperf_start_tcp_server(IP6_ADDR_ANY, port, lwiperf_report, NULL);
+            ctx->iperf_session = lwiperf_start_tcp_server(IP6_ADDR_ANY, port, lwiperf_report, ctx);
         }
         else
         {
-            ctx->iperf_session = lwiperf_start_udp_server(IP6_ADDR_ANY, port, lwiperf_report, NULL);
+            ctx->iperf_session = lwiperf_start_udp_server(IP6_ADDR_ANY, port, lwiperf_report, ctx);
         }
     }
     else
@@ -608,7 +626,7 @@ static void iperf_test_start(void *arg)
             }
             ip6_addr_assign_zone(ip_2_ip6(&server_address), IP6_UNICAST, netifbind);
             ctx->iperf_session = lwiperf_start_tcp_client(&server_address, port, ctx->client_type, amount, buffer_len,
-                                                          0, lwiperf_report, 0);
+                                                          0, lwiperf_report, ctx);
         }
         else
         {
@@ -620,7 +638,7 @@ static void iperf_test_start(void *arg)
             }
             ctx->iperf_session =
                 lwiperf_start_udp_client(&bind_address, port, &server_address, port, ctx->client_type, amount,
-                                         buffer_len, IPERF_UDP_CLIENT_RATE * udp_rate_factor, 0, lwiperf_report, NULL);
+                                         buffer_len, IPERF_UDP_CLIENT_RATE * udp_rate_factor, 0, lwiperf_report, ctx);
         }
     }
 
@@ -632,6 +650,18 @@ static void iperf_test_start(void *arg)
     {
         otCliOutputFormat("IPERF initialization successful\r\n");
     }
+}
+
+static void iperf_free_ctx_iperf_session(void *arg, enum lwiperf_report_type report_type)
+{
+    struct iperf_test_context *ctx = (struct iperf_test_context *)arg;
+
+    if (!ctx || ctx->server_mode ||
+        (ctx->client_type == LWIPERF_TRADEOFF &&
+         (report_type == LWIPERF_TCP_DONE_CLIENT_TX || report_type == LWIPERF_UDP_DONE_CLIENT_TX)))
+        return;
+
+    ctx->iperf_session = NULL;
 }
 
 static void lwiperf_report(void                    *arg,
@@ -663,6 +693,15 @@ static void lwiperf_report(void                    *arg,
         otCliOutputFormat(" IPERF Report error\r\n");
     }
     otCliOutputFormat("\r\n");
+    iperf_free_ctx_iperf_session(arg, report_type);
+
+#ifdef DISABLE_TCPIP_INIT
+    /* Re-enable Tickless Idle */
+    if (iperf_need_enable_tickless_idle(arg, report_type))
+    {
+        iperf_disable_tickless_hook(false);
+    }
+#endif
 }
 
 int get_uint(const char *arg, unsigned int *dest, unsigned int len)
@@ -768,3 +807,55 @@ static void UDPClientTradeOff(void)
 
     tcpip_callback(iperf_test_start, (void *)&ctx);
 }
+
+#ifdef DISABLE_TCPIP_INIT
+static void iperf_disable_tickless_hook(bool disable)
+{
+    static bool disable_tickless = false;
+
+    if (disable == true)
+    {
+        if (disable_tickless == false)
+        {
+            APP_SetTicklessIdle(false);
+            disable_tickless = true;
+        }
+    }
+    else
+    {
+        if (disable_tickless == true)
+        {
+            APP_SetTicklessIdle(true);
+            disable_tickless = false;
+        }
+    }
+}
+
+/**
+ *  For server mode, we do not re-enable tickless idle in case client runs continuous multiple tests.
+ *  For client mode, we re-enable tickless idle except for one case:
+ *  We start a bidirectional test individually, first TX and then RX. In this case, for the first TX,
+ *  we do not re-enable tickless idle and re-enable it after latter RX is done.
+ */
+static bool iperf_need_enable_tickless_idle(void *arg, enum lwiperf_report_type report_type)
+{
+    struct iperf_test_context *ctx = (struct iperf_test_context *)arg;
+
+    if (!ctx)
+    {
+        return true;
+    }
+
+    if (ctx->server_mode)
+    {
+        return false;
+    }
+    else if (ctx->client_type == LWIPERF_TRADEOFF &&
+             (report_type == LWIPERF_TCP_DONE_CLIENT_TX || report_type == LWIPERF_UDP_DONE_CLIENT_TX))
+    {
+        return false;
+    }
+
+    return true;
+}
+#endif
