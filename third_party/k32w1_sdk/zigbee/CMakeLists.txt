@@ -259,6 +259,12 @@ target_compile_definitions(nxp-k32w1-zigbee-plat
         FSL_OSA_BM_TIMER_CONFIG=FSL_OSA_BM_TIMER_SYSTICK
 )
 
+if (OT_ZB_SUPPORT)
+    target_compile_definitions(nxp-k32w1-zigbee-plat
+        PUBLIC
+            -DDEBUG_CONSOLE_TRANSFER_NON_BLOCKING=1
+    )
+endif()
 target_include_directories(nxp-k32w1-zigbee-plat
     PUBLIC
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform
@@ -306,5 +312,9 @@ target_include_directories(nxp-k32w1-zigbee-plat
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/platform/kw45_k32w1
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/SecLib
 )
+
+# Force dependency order between the platform lib & the zigbee-gen since
+# some generated files are included in the platform.
+target_link_libraries(nxp-k32w1-zigbee-plat PUBLIC nxp-k32w1-zigbee-gen)
 
 target_link_libraries(nxp-k32w1-zigbee PUBLIC ${NXP_DRIVER_LIB} ${SDK_ZB_LIBS} nxp-k32w1-zigbee-plat nxp-k32w1-zigbee-gen)

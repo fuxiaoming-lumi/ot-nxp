@@ -32,7 +32,6 @@ set(UART_INSTANCE "1" CACHE STRING "Uart instance for RCP comms")
 list(APPEND OT_PLATFORM_DEFINES
     "USE_NBU=${USE_NBU}"
     "CPU_K32W1480VFTA"
-    "SERIAL_MANAGER_NON_BLOCKING_MODE=1"
     "SERIAL_USE_CONFIGURE_STRUCTURE=1"
     "SDK_COMPONENT_INTEGRATION=1"
     "SERIAL_PORT_TYPE_UART=1"
@@ -238,7 +237,6 @@ if (OT_RCP_FLOW_CONTROL)
              -DOT_APP_UART_BAUDRATE=${UART_BAUD_RATE}
              -DSERIAL_MANAGER_RING_BUFFER_SIZE=320
              -DOT_APP_SERIAL_PORT_USE_FC=1
-             -DOT_APP_UART_INSTANCE=${UART_INSTANCE}
     )
 endif()
 
@@ -248,27 +246,18 @@ if (OT_RCP_UART_DMA)
              -DSERIAL_PORT_TYPE_UART_DMA=1
              -DOT_APP_UART_BAUDRATE=${UART_BAUD_RATE}
              -DSERIAL_MANAGER_RING_BUFFER_SIZE=320
-             -DOT_APP_UART_INSTANCE=${UART_INSTANCE}
              -DHAL_UART_DMA_ENABLE=1
              -DOT_APP_UART_TYPE=kSerialPort_UartDma
              -DOT_APP_SERIAL_PORT_USE_DMA=1
              -DLPUART_RING_BUFFER_SIZE=1024
     )
-
-    if (OT_ZB_SUPPORT)
-        list(REMOVE_ITEM OT_PLATFORM_DEFINES
-            "SERIAL_MANAGER_NON_BLOCKING_MODE=1"
-        )
-        target_compile_definitions(${NXP_DRIVER_LIB}
-            PUBLIC
-                -DDEBUG_CONSOLE_TRANSFER_NON_BLOCKING=1
-        )
-    endif()
 endif()
 
 target_compile_definitions(${NXP_DRIVER_LIB}
     PUBLIC
         ${OT_PLATFORM_DEFINES}
+        -DOT_APP_UART_INSTANCE=${UART_INSTANCE}
+        -DDEBUG_CONSOLE_TRANSFER_NON_BLOCKING=1
 )
 
 target_compile_options(${NXP_DRIVER_LIB}

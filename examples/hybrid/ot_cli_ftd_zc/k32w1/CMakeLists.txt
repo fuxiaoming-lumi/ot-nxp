@@ -134,6 +134,11 @@ target_compile_definitions(nxp-k32w1-zigbee
         SINGLE_CHANNEL=${SINGLE_CHANNEL}
 )
 
+target_compile_options(nxp-k32w1-zigbee-plat
+    PRIVATE
+        -include ${CMAKE_CURRENT_SOURCE_DIR}/app_preinclude.h
+)
+
 target_include_directories(nxp-k32w1-zigbee PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${EXAMPLE_BASE_DIR}
