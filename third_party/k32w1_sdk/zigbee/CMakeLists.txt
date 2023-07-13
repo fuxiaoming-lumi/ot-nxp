@@ -158,16 +158,6 @@ add_library(nxp-k32w1-zigbee
 
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/BDB/Source/NwkSteering/bdb_ns.c
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/BDB/Source/NwkFormation/bdb_nf.c
-
-        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/platform/glue.c
-        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/platform/leds.c
-        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/platform/uart_hal.c
-
-        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/PDM/PDM_adapter.c
-        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/PWRM/PWRM_adapter.c
-
-        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/SecLib/SecLib_.c
-        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/SecLib/aes_mmo.c
 )
 
 target_compile_definitions(nxp-k32w1-zigbee
@@ -190,6 +180,7 @@ target_compile_definitions(nxp-k32w1-zigbee
 
 target_include_directories(nxp-k32w1-zigbee
     PUBLIC
+            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/Common
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/SecLib
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/PWRM/Include
@@ -243,4 +234,77 @@ target_include_directories(nxp-k32w1-zigbee
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/PDM/Include
 )
 
-target_link_libraries(nxp-k32w1-zigbee PUBLIC ${NXP_DRIVER_LIB} ${SDK_ZB_LIBS} nxp-k32w1-zigbee-gen)
+add_library(nxp-k32w1-zigbee-plat
+        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/platform/glue.c
+        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/platform/leds.c
+        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/platform/uart_hal.c
+
+        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/PDM/PDM_adapter.c
+        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/PWRM/PWRM_adapter.c
+
+        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/SecLib/SecLib_.c
+        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/SecLib/aes_mmo.c
+)
+
+target_compile_definitions(nxp-k32w1-zigbee-plat
+    PUBLIC
+        CPU_K32W1480VFTA
+        SERIAL_PORT_TYPE_UART=1
+        LITTLE_ENDIAN_PROCESSOR
+        ZIGBEE_USE_FRAMEWORK
+        JENNIC_CHIP_FAMILY_JN518x
+        JENNIC_CHIP_FAMILY=JN518x
+        JENNIC_CHIP_FAMILY_NAME=_JN518x
+        JN518x
+        FSL_OSA_BM_TIMER_CONFIG=FSL_OSA_BM_TIMER_SYSTICK
+)
+
+target_include_directories(nxp-k32w1-zigbee-plat
+    PUBLIC
+            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform
+            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/Common
+            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/SecLib
+            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/PWRM/Include
+            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/RNG/Interface
+
+            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/ieee-802.15.4/Include
+            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/ieee-802.15.4/mMac/Include
+            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/ieee-802.15.4/ieee_802_15_4/mac/interface
+
+            $ENV{NXP_K32W1_SDK_ROOT}/CMSIS/Core/Include
+
+            $ENV{NXP_K32W1_SDK_ROOT}/components/button
+            $ENV{NXP_K32W1_SDK_ROOT}/components/gpio
+            $ENV{NXP_K32W1_SDK_ROOT}/components/osa
+            $ENV{NXP_K32W1_SDK_ROOT}/components/led
+            $ENV{NXP_K32W1_SDK_ROOT}/components/lists
+            $ENV{NXP_K32W1_SDK_ROOT}/components/power_manager/boards/K32W148-EVK
+            $ENV{NXP_K32W1_SDK_ROOT}/components/power_manager/core
+            $ENV{NXP_K32W1_SDK_ROOT}/components/serial_manager
+            $ENV{NXP_K32W1_SDK_ROOT}/components/timer_manager
+            $ENV{NXP_K32W1_SDK_ROOT}/components/uart
+
+            $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480
+            $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/drivers
+            $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/utilities/debug_console
+            $ENV{NXP_K32W1_SDK_ROOT}/devices/KW45B41Z83/drivers
+
+            $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/common
+            $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/gpio
+            $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/lpuart
+            $ENV{NXP_K32W1_SDK_ROOT}/platform/utilities/debug_console
+
+            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/boards/kw45_k32w1
+            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/boards/kw45_k32w1/K32W1480
+            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/Common
+            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/FunctionLib
+            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/LowPower
+            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/NVM/Interface
+            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/OtaSupport/Interface
+            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/PDM/Include
+            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/PDUM/Include
+            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/platform/kw45_k32w1
+            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/SecLib
+)
+
+target_link_libraries(nxp-k32w1-zigbee PUBLIC ${NXP_DRIVER_LIB} ${SDK_ZB_LIBS} nxp-k32w1-zigbee-plat nxp-k32w1-zigbee-gen)

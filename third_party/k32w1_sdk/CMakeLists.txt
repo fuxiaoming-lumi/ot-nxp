@@ -336,6 +336,7 @@ set(K32W1_SDK_INCLUDES
     $ENV{NXP_K32W1_SDK_ROOT}/components/flash/nor/lpspi
     $ENV{NXP_K32W1_SDK_ROOT}/components/flash/nor
     $ENV{NXP_K32W1_SDK_ROOT}/components/power_manager/boards/K32W148-EVK
+    $ENV{NXP_K32W1_SDK_ROOT}/components/power_manager/core
 )
 
 if (SDK_RELEASE)
