@@ -51,6 +51,7 @@ add_executable(ot-cli-ftd-zc-${OT_NXP_PLATFORM}
     ${EXAMPLE_BASE_DIR}/app_serial_commands.c
 
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/examples/zb_common/app_zigbee_config.c
+    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/examples/zb_common/app_uart.c
 
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/port_JN518x.c
 
@@ -125,6 +126,8 @@ target_compile_definitions(${NXP_DRIVER_LIB}
         FSL_OSA_TASK_ENABLE=1
         FSL_OSA_MAIN_FUNC_ENABLE=1
 #        gMainThreadPriority_c=7	// it's 7 by default
+        DebugConsole_c=0
+        BOARD_UART_INSTANCE=0
 )
 
 target_compile_definitions(nxp-k32w1-zigbee
@@ -183,5 +186,4 @@ target_link_libraries(ot-cli-ftd-zc-${OT_NXP_PLATFORM} PUBLIC
 
     -Llib
     -T${APP_LINKER_FILE}
-    -Wl,--wrap=otCliInputLine
 )

@@ -23,6 +23,7 @@
 /* ZB stuff */
 #include "app_coordinator.h"
 #include "app_main.h"
+#include "dbg.h"
 #include "zigbee_config.h"
 
 /* OT includes */
@@ -65,13 +66,9 @@ static void App_ZB_Init(void);
 * Public functions prototypes
 *************************************************************************************
 ************************************************************************************/
-void otAppCliInit(otInstance *aInstance);
-void otCliInputLine(char *aBuf);
-
-void vProcessCommand(char *tmp);
-
-void __real_otCliInputLine(char *aBuf);
-
+void        otAppCliInit(otInstance *aInstance);
+extern void UART_vInit(void);
+extern void APP_taskAtSerial(void);
 /************************************************************************************
 *************************************************************************************
 * Public functions
@@ -173,7 +170,7 @@ void App_ZB_Run(uint32_t param)
         ZTIMER_vTask();
 
         APP_taskCoordinator();
-
+        APP_taskAtSerial();
         if (!gUseRtos_c)
         {
             break;
@@ -195,15 +192,10 @@ void App_ZB_Init(void)
     /* Initialise the Persistent Data Manager */
     PDM_eInitialise(1200, 63, NULL);
 
+    UART_vInit();
+
     APP_vInitialiseCoordinator();
 }
 /*! *********************************************************************************
  * @}
  ********************************************************************************** */
-
-void __wrap_otCliInputLine(char *aBuf)
-{
-    vProcessCommand(aBuf);
-
-    __real_otCliInputLine(aBuf);
-}

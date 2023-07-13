@@ -22,18 +22,6 @@ extern "C" {
 #define TRACE_APP TRUE
 #define TRACE_ZCL TRUE
 
-extern void otCliOutputFormat(const char *aFmt, ...);
-
-#undef DBG_vPrintf
-#define DBG_vPrintf(STREAM, FORMAT, ARGS...)     \
-    do                                           \
-    {                                            \
-        if (STREAM)                              \
-        {                                        \
-            otCliOutputFormat((FORMAT), ##ARGS); \
-        }                                        \
-    } while (0)
-
 #ifdef __cplusplus
 }
 #endif
