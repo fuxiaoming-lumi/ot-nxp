@@ -44,6 +44,9 @@ set(WIFI_COMMON_SOURCES
     ${WIFI_PATH}/port/os/os.c
     ${WIFI_PATH}/wifidriver/mlan_11ac.c
     ${WIFI_PATH}/wifidriver/mlan_11ax.c
+    ${WIFI_PATH}/wifidriver/mlan_11k.c
+    ${WIFI_PATH}/wifidriver/mlan_11v.c
+    ${WIFI_PATH}/wifidriver/mlan_mbo.c
     ${WIFI_PATH}/wifidriver/mlan_11d.c
     ${WIFI_PATH}/wifidriver/mlan_11h.c
     ${WIFI_PATH}/wifidriver/mlan_11n.c

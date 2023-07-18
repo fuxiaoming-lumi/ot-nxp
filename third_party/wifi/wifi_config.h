@@ -43,16 +43,11 @@
 /* WLAN SCAN OPT */
 #define CONFIG_SCAN_WITH_RSSIFILTER
 /* WLAN white/black list opt */
-#define CONFIG_UAP_STA_MAC_ADDR_FILTER
-#define CONFIG_COMBO_SCAN
 #define CONFIG_WIFI_DTIM_PERIOD
 #define CONFIG_UART_INTERRUPT
 #define CONFIG_WIFI_CAPA
-#define CONFIG_WIFI_RTS_THRESHOLD
-#define CONFIG_WIFI_FRAG_THRESHOLD
 #define CONFIG_WIFI_11D_ENABLE
 #define CONFIG_WIFI_HIDDEN_SSID
-#define CONFIG_WIFI_MAX_CLIENTS_CNT
 #define CONFIG_WMM_UAPSD
 #define CONFIG_WIFI_GET_LOG
 #define CONFIG_ENABLE_802_11K
@@ -71,6 +66,14 @@
 // OTP options
 #undef OTP_CHANINFO
 #define WIFI_ADD_ON 1
+#endif
+
+#ifdef CONFIG_11AX
+#define CONFIG_11K 1
+#define CONFIG_11V 1
+#ifndef CONFIG_WPA_SUPP
+#define CONFIG_MBO 1
+#endif
 #endif
 
 #define CONFIG_IPV6               1
