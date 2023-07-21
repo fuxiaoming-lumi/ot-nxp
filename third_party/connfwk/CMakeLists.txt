@@ -33,13 +33,15 @@
 # set(CONNFWK_PWR ON) -> will build the LowPower module as a lib
 # and so on ...
 
+# Tell the framework which SDK lib to link to, to retrieve dependencies (include paths, flags)
+set(CONNFWK_MCUX_SDK_LIB_EXTERNAL ${NXP_DRIVER_LIB})
+
 # Add the Framework as a subdirectory
 add_subdirectory(${NXP_SDK_ROOT}/middleware/wireless/framework ${PROJECT_BINARY_DIR}/framework)
 
 # Forward SDK and OT include paths, compile definitions, etc... to the framework to resolve dependencies
 target_link_libraries(connfwk-config
     INTERFACE
-        ${NXP_DRIVER_LIB}
         ${NXP_BOARD_LIB}
 )
 
