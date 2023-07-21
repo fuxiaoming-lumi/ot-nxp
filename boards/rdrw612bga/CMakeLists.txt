@@ -45,6 +45,7 @@ target_include_directories(${NXP_BOARD_LIB}
 target_link_libraries(${NXP_BOARD_LIB}
     PRIVATE
         ot-config
+        connfwk-LowPower
         ${NXP_DRIVER_LIB}
         ${OT_PLATFORM_LIB}
 )
