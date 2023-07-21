@@ -39,3 +39,8 @@ target_include_directories(ot-cli-${OT_NXP_PLATFORM} PRIVATE
 target_compile_definitions(ot-config INTERFACE
     OT_APP_CLI_LOWPOWER_ADDON
 )
+
+target_link_libraries(ot-cli-${OT_NXP_PLATFORM}
+    PRIVATE
+        connfwk-LowPower
+)
