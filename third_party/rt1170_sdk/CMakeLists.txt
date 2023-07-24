@@ -282,10 +282,11 @@ target_compile_definitions(${NXP_DRIVER_LIB}
 
 target_link_libraries(${NXP_DRIVER_LIB}
     PUBLIC
+    freertos_kernel
     ${NXP_BOARD_LIB}
     #Dependency to little_fs config files
     connfwk-platform-${OT_NXP_PLATFORM_FAMILY}
-    freertos_kernel
+    connfwk-platform-${OT_NXP_PLATFORM}
 )
 
 target_compile_options(${NXP_DRIVER_LIB}
