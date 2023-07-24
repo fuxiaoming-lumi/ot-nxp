@@ -248,6 +248,7 @@ target_link_libraries(${NXP_DRIVER_LIB}
     ${NXP_BOARD_LIB}
     #Dependency to little_fs config files
     connfwk-platform-${OT_NXP_PLATFORM_FAMILY}
+    connfwk-platform-${OT_NXP_PLATFORM}
 )
 
 target_link_options(${NXP_DRIVER_LIB}
