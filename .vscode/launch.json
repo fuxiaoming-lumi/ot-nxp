@@ -13,7 +13,7 @@
             "type": "cortex-debug",
             "request": "launch",
             "executable": "${command:cmake.launchTargetPath}",
-            "cwd": "${workspaceFolder}",
+            "cwd": "${workspaceFolder:ot-nxp}",
             "runToEntryPoint": "main",
             "servertype": "jlink",
             "device" : "${input:JLinkDevice}",
@@ -23,8 +23,8 @@
             "svdFile": "${input:SvdFile}",
             "serverArgs": [
                 "-speed",
-                "${input:Speed}"
-            ]
+                "${input:JLinkSpeed}"
+            ],
         },
         {
             // This debug configuration interacts with CMake Tools extension
@@ -35,7 +35,7 @@
             "type": "cortex-debug",
             "request": "attach",
             "executable": "${command:cmake.launchTargetPath}",
-            "cwd": "${workspaceFolder}",
+            "cwd": "${workspaceFolder:ot-nxp}",
             "servertype": "jlink",
             "device" : "${input:JLinkDevice}",
             "interface": "${input:JLinkInterface}",
@@ -44,82 +44,74 @@
             "svdFile": "${input:SvdFile}",
             "serverArgs": [
                 "-speed",
-                "${input:Speed}"
-            ]
+                "${input:JLinkSpeed}"
+            ],
         },
     ],
     "inputs": [
         {
             "id": "JLinkDevice",
             "type": "command",
-            "command": "extension.commandvariable.file.content", // requires following extension: rioj7.command-variable
+            "command": "extension.commandvariable.pickStringRemember", // requires following extension: rioj7.command-variable
             "args": {
-                "fileName": "${workspaceFolder}/.vscode/configs/platforms-config.json",
-                "json": "content.${pickStringRemember:platform}.JLinkDevice",
-                "default": "",
-                "pickStringRemember": {
-                    "platform": {
-                        "description": "Select the OT-NXP Platform:",
-                        "default": "Unknown",
-                        "options": [
-                            "RW612",
-                            "RW612_JTAG",
-                        ],
-                        "key": "Platform"
+                "description": "Select a platform",
+                "key": "jlink-device",
+                "fileName": "${workspaceFolder:ot-nxp}/.vscode/configs/platforms.json",
+                "fileFormat": "json",
+                "jsonOption": {
+                    "label": "content.Platforms[__itemIdx__].name",
+                    "description": "content.Platforms[__itemIdx__].description",
+                    "value": {
+                        "jlink-device": "content.Platforms[__itemIdx__].JLinkDevice",
+                        "jlink-interface": "content.Platforms[__itemIdx__].JLinkInterface",
+                        "jlink-speed": "content.Platforms[__itemIdx__].JLinkSpeed",
+                        "svd": "content.Platforms[__itemIdx__].svdFile",
                     }
-                },
-            }
+                }
+            },
         },
         {
             "id": "JLinkInterface",
             "type": "command",
-            "command": "extension.commandvariable.file.content", // requires following extension: rioj7.command-variable
-            "args": {
-                "fileName": "${workspaceFolder}/.vscode/configs/platforms-config.json",
-                "json": "content.${remember:Platform}.JLinkInterface",
-                "default": "",
-            }
+            "command": "extension.commandvariable.remember", // requires following extension: rioj7.command-variable
+            "args": { "key": "jlink-interface" }
+        },
+        {
+            "id": "JLinkSpeed",
+            "type": "command",
+            "command": "extension.commandvariable.remember", // requires following extension: rioj7.command-variable
+            "args": { "key": "jlink-speed" }
         },
         {
             "id": "SvdFile",
             "type": "command",
-            "command": "extension.commandvariable.file.content", // requires following extension: rioj7.command-variable
-            "args": {
-                "fileName": "${workspaceFolder}/.vscode/configs/platforms-config.json",
-                "json": "content.${remember:Platform}.svdFile",
-                "default": "",
-            }
-        },
-        {
-            "id": "Speed",
-            "type": "command",
-            "command": "extension.commandvariable.file.content", // requires following extension: rioj7.command-variable
-            "args": {
-                "fileName": "${workspaceFolder}/.vscode/configs/platforms-config.json",
-                "json": "content.${remember:Platform}.speed",
-                "default": "4000",
-            }
+            "command": "extension.commandvariable.remember", // requires following extension: rioj7.command-variable
+            "args": { "key": "svd" }
         },
         {
             /* This command allows the user to select a JLink serial number based on a nickname
              * It makes it easier to select a device when starting a debug session
-             * The file jlink_setup.cfg must be created and filled by the user, using the following pattern:
+             * The file jlink_setup.cfg describes the J-Link devices/probes connected to the user computer
+             * By default, this file doesn't exist, it can be created and filled manually with the following pattern:
              * nickname=serial_number
              * see jlink_setup_example.cfg as an example
-             * */
+             *
+             * The framework also provides a task "Find J-Link probes" which will automatically generate the file
+             * with all the J-Link probes connected.
+             */
             "id": "JLinkSerial",
             "type": "command",
             "command": "extension.commandvariable.pickStringRemember", // requires following extension: augustocdias.tasks-shell-input
             "args": {
                 "description": "Select the JLink serial to debug:",
                 "default": "Unknown",
-                "fileName": "${workspaceFolder}/.vscode/configs/jlink_setup.cfg",
+                "fileName": "${workspaceFolder:ot-nxp}/.vscode/configs/jlink_setup.cfg",
                 "pattern": {
                     "regexp": "^([^#].*)=(.*\\d)",
                     "label": "$1",
                     "value": "$2"
-                }
-            }
+                },
+            },
         },
     ]
 }
