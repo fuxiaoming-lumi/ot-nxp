@@ -155,6 +155,16 @@ if(NOT NXP_SDK_ROOT)
     set(NXP_SDK_ROOT ${PROJECT_SOURCE_DIR}/../../../)
 endif()
 
+# Determine whether the SDK used is the github repo, a package or the internal repo
+if(EXISTS ${NXP_SDK_ROOT}/core/.github)
+    set(SDK_TYPE "GITHUB")
+elseif(EXISTS ${NXP_SDK_ROOT}/SW-Content-Register.txt)
+    set(SDK_TYPE "PACKAGE")
+else()
+    set(SDK_TYPE "INTERNAL")
+endif()
+message(STATUS "SDK_TYPE: ${SDK_TYPE}")
+
 add_subdirectory(third_party)
 add_subdirectory(src)
 add_subdirectory(examples)
