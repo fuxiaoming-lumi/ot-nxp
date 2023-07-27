@@ -161,6 +161,7 @@ list(APPEND SDK_SOURCES
     ${NXP_SDK_ROOT}/components/log/fsl_component_log.c
     ${NXP_SDK_ROOT}/components/log/fsl_component_log_backend_debugconsole.c
     ${NXP_SDK_ROOT}/components/timer_manager/fsl_component_timer_manager.c
+    ${NXP_SDK_ROOT}/components/time_stamp/fsl_adapter_gpt_time_stamp.c
     ${NXP_SDK_ROOT}/components/timer/fsl_adapter_pit.c
     ${NXP_SDK_ROOT}/components/internal_flash/${EVK_MIMXRT1170}/fsl_adapter_flexspi_nor_flash.c
     ${NXP_SDK_ROOT}/components/gpio/fsl_adapter_igpio.c
