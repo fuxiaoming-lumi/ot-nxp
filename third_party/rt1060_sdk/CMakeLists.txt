@@ -133,6 +133,7 @@ add_library(${NXP_DRIVER_LIB}
     ${NXP_SDK_ROOT}/components/log/fsl_component_log_backend_debugconsole.c
     ${NXP_SDK_ROOT}/components/timer_manager/fsl_component_timer_manager.c
     ${NXP_SDK_ROOT}/components/timer/fsl_adapter_pit.c
+    ${NXP_SDK_ROOT}/components/time_stamp/fsl_adapter_pit_time_stamp.c
     ${NXP_SDK_ROOT}/components/rng/fsl_adapter_trng.c
     ${NXP_SDK_ROOT}/components/internal_flash/fsl_adapter_flexspi_nor_flash.c
     ${NXP_SDK_ROOT}/components/gpio/fsl_adapter_igpio.c
@@ -187,6 +188,7 @@ target_include_directories(${NXP_DRIVER_LIB}
         ${NXP_SDK_ROOT}/components/log
         ${NXP_SDK_ROOT}/components/timer_manager
         ${NXP_SDK_ROOT}/components/timer
+        ${NXP_SDK_ROOT}/components/time_stamp/
         ${NXP_SDK_ROOT}/components/rng
         ${NXP_SDK_ROOT}/components/internal_flash
         ${NXP_SDK_ROOT}/components/gpio
