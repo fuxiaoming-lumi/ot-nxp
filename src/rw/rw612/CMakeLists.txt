@@ -122,6 +122,13 @@ elseif(OT_MTD)
     )
 endif()
 
+if(OT_NXP_LNT)
+    target_compile_definitions(${OT_PLATFORM_LIB}
+	PUBLIC
+            -DOT_LNT_TEST=1
+    )
+endif()
+
 if(OT_NXP_BUILD_APP_AS_LIB MATCHES "ON")
     if(OT_APP_CLI_FREERTOS_IPERF MATCHES "ON")
         target_compile_definitions(${OT_PLATFORM_LIB}
