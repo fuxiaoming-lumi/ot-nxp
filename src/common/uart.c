@@ -46,6 +46,11 @@
 #include <utils/uart.h>
 #include <openthread/tasklet.h>
 
+#if OT_LNT_TEST
+#include "FreeRTOS.h"
+#include "queue.h"
+#endif
+
 /* -------------------------------------------------------------------------- */
 /*                               Private macros                               */
 /* -------------------------------------------------------------------------- */
@@ -60,6 +65,15 @@
 #define OT_PLAT_UART_FLUSH_DELAY_MS 2U
 #endif
 
+#if OT_LNT_TEST
+QueueHandle_t xLntQueue = NULL;
+
+typedef struct
+{
+    uint32_t MsgLen;
+    uint8_t  Msg[60];
+} otQueueMsg;
+#endif
 /* -------------------------------------------------------------------------- */
 /*                             Private prototypes                             */
 /* -------------------------------------------------------------------------- */
@@ -207,6 +221,9 @@ void otPlatCliUartProcess(void)
 {
     uint32_t bytesRead = 0U;
     uint32_t intMask;
+#if OT_LNT_TEST
+    otQueueMsg handleMsg;
+#endif
 
     if ((otPlatUartEnabled) &&
         (SerialManager_TryRead((serial_read_handle_t)otCliSerialReadHandle, rxBuffer, OT_PLAT_UART_RECEIVE_BUFFER_SIZE,
@@ -215,6 +232,16 @@ void otPlatCliUartProcess(void)
     {
         otPlatUartReceived(rxBuffer, bytesRead);
     }
+
+#if OT_LNT_TEST
+    if (xLntQueue != NULL)
+    {
+        if (pdPASS == xQueueReceive(xLntQueue, &handleMsg, 0))
+        {
+            otPlatUartReceived((uint8_t *)&handleMsg.Msg[0], (uint16_t)handleMsg.MsgLen);
+        }
+    }
+#endif
 
     intMask = DisableGlobalIRQ();
     if (txDone == true)
