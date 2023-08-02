@@ -124,7 +124,7 @@ build()
     cd "$1"
 
     # shellcheck disable=SC2068
-    cmake -GNinja "${@:3}" "-DSDK_RELEASE=$2" "${OT_SRCDIR}"
+    cmake -GNinja "${@:2}" "${OT_SRCDIR}"
 
     if [[ -n ${OT_CMAKE_NINJA_TARGET[*]} ]]; then
         ninja "${OT_CMAKE_NINJA_TARGET[@]}"
@@ -142,15 +142,15 @@ build()
 create_directory_and_build()
 {
     if [ "$1" == 'all' ]; then
-        build iwx12_spi "$2" "${OT_OPTIONS_TRANSCEIVER_IWX12_SPI[@]}" "-DNXP_SDK_ROOT=$NXP_RT1170_SDK_ROOT"
+        build iwx12_spi "${OT_OPTIONS_TRANSCEIVER_IWX12_SPI[@]}" "-DNXP_SDK_ROOT=$NXP_RT1170_SDK_ROOT"
     elif [ "$1" == 'k32w0_uart_flow_control' ]; then
         echo "Warning: No longer maintain"
-        build k32w0_uart_flow_control "$2" "${OT_OPTIONS_TRANSCEIVER_K32W0_UART_FLOW_CONTROL[@]}"
+        build k32w0_uart_flow_control "${OT_OPTIONS_TRANSCEIVER_K32W0_UART_FLOW_CONTROL[@]}"
     elif [ "$1" == 'k32w0_spi' ]; then
         echo "Warning: No longer maintain"
-        build k32w0_spi "$2" "${OT_OPTIONS_TRANSCEIVER_K32W0_SPI[@]}" "-DNXP_SDK_ROOT=$NXP_RT1170_SDK_ROOT"
+        build k32w0_spi "${OT_OPTIONS_TRANSCEIVER_K32W0_SPI[@]}" "-DNXP_SDK_ROOT=$NXP_RT1170_SDK_ROOT"
     elif [ "$1" == 'iwx12_spi' ]; then
-        build iwx12_spi "$2" "${OT_OPTIONS_TRANSCEIVER_IWX12_SPI[@]}" "-DNXP_SDK_ROOT=$NXP_RT1170_SDK_ROOT"
+        build iwx12_spi "${OT_OPTIONS_TRANSCEIVER_IWX12_SPI[@]}" "-DNXP_SDK_ROOT=$NXP_RT1170_SDK_ROOT"
     else
         echo >&2 "Unsupported action: $1. Supported: all, k32w0_uart_flow_control, k32w0_spi, iwx12_spi"
         # 128 for Invalid arguments
@@ -163,31 +163,16 @@ main()
 
     # check if environmental variable NXP_RT1170_SDK_ROOT is set
     #     if not, then use "../../../" as a possible path
-    # then  check if NXP_RT1170_SDK_ROOT contains a valid SDK
-    #     if SW-Content-Register.txt is found
-    #         then NXP_RT1170_SDK_ROOT points to a released SDK
-    #     else if .gitignore is found
-    #         then NXP_RT1170_SDK_ROOT points to a cloned repository
-
     if [ -z "$NXP_RT1170_SDK_ROOT" ]; then
-        NXP_RT1170_SDK_ROOT="../../../"
-    fi
-
-    if [ -f $NXP_RT1170_SDK_ROOT/SW-Content-Register.txt ]; then
-        SDK_RELEASE=ON
-    elif [ -f $NXP_RT1170_SDK_ROOT/.gitmodules ]; then
-        SDK_RELEASE=OFF
-    else
-        echo "Could not found a valid SDK package!"
-        return
+        NXP_RT1170_SDK_ROOT="${OT_SRCDIR}/../../../"
     fi
 
     echo "NXP_RT1170_SDK_ROOT set to " $NXP_RT1170_SDK_ROOT
 
     if [ $# == 0 ]; then
-        create_directory_and_build all $SDK_RELEASE
+        create_directory_and_build all
     else
-        create_directory_and_build "$1" $SDK_RELEASE
+        create_directory_and_build "$1"
     fi
 }
 
