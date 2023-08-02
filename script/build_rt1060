@@ -87,36 +87,17 @@ main()
 {
 
     # check if environmental variable NXP_RT1060_SDK_ROOT is set
-    #     if not, then use "../../../" as a possible path
-    # then  check if NXP_RT1060_SDK_ROOT contains a valid SDK
-    #     if SW-Content-Register.txt is found
-    #         then NXP_RT1060_SDK_ROOT points to a released SDK
-    #     else if .gitignore is found
-    #         then NXP_RT1060_SDK_ROOT points to a cloned repository
-
+    #     if not, then use the github repo mounted with west
     if [ -z "$NXP_RT1060_SDK_ROOT" ]; then
         export NXP_RT1060_SDK_ROOT="${OT_SRCDIR}/third_party/rt1060_sdk/repo"
-        SDK_TYPE="GITHUB"
-    fi
-
-    if [ -f $NXP_RT1060_SDK_ROOT/SW-Content-Register.txt ]; then
-        SDK_TYPE="PACKAGE"
-    elif [ -f $NXP_RT1060_SDK_ROOT/.gitmodules ]; then
-        SDK_TYPE="INTERNAL_GIT"
     fi
 
     echo "NXP_RT1060_SDK_ROOT set to " $NXP_RT1060_SDK_ROOT
-
-    echo "SDK_TYPE is et to" $SDK_TYPE
-
-    echo " OT source is set to " "$OT_SRCDIR"
+    echo "OT source is set to " "$OT_SRCDIR"
 
     local options=("${OT_OPTIONS[@]}")
 
     options+=("$@")
-
-    options+=("-DSDK_TYPE=$SDK_TYPE")
-
     options+=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
 
     build "${options[@]}"
