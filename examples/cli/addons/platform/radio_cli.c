@@ -397,7 +397,8 @@ static otError ProcessMfgCommands(void *aContext, uint8_t aArgsLength, char *aAr
                 break;
 
             case MFG_CMD_GET_SET_TXPOWER + 1: // set txpower
-                error = ProcessMfgSetInt8(aContext, MFG_CMD_GET_SET_TXPOWER, aArgsLength, aArgs, -20, 22);
+                error = ProcessMfgSetInt8(aContext, MFG_CMD_GET_SET_TXPOWER, aArgsLength, aArgs, -20,
+                                          OT_NXP_PLAT_TX_PWR_LIMIT_MAX / 2);
                 break;
 
             case MFG_CMD_CONTINUOUS_TX:
@@ -409,8 +410,7 @@ static otError ProcessMfgCommands(void *aContext, uint8_t aArgsLength, char *aAr
                 break;
 
             case MFG_CMD_GET_SET_PAYLOAD_SIZE + 1: // set
-                error = ProcessMfgSetInt8(aContext, MFG_CMD_GET_SET_PAYLOAD_SIZE, aArgsLength, aArgs, 0, 127);
-                // actual limits are set in MFG function and error is return in case of wrong parameter
+                error = ProcessMfgSetInt8(aContext, MFG_CMD_GET_SET_PAYLOAD_SIZE, aArgsLength, aArgs, 17, 116);
                 break;
 
             case MFG_CMD_GET_RX_RESULT:
@@ -452,11 +452,12 @@ static otError ProcessMfgCommands(void *aContext, uint8_t aArgsLength, char *aAr
 
             case MFG_CMD_BURST_TX:
             {
-                uint8_t mode = 0;
+                uint8_t mode = 0, gap = 0;
                 if (aArgsLength == 3)
                 {
                     mode = (uint8_t)atoi(aArgs[1]);
-                    if (mode < 8)
+                    gap  = (uint8_t)atoi(aArgs[2]);
+                    if ((mode < 8) && (gap > 5))
                     {
                         payload[1] = MFG_CMD_BURST_TX;
                         payload[4] = mode;
@@ -489,15 +490,18 @@ static otError ProcessMfgCommands(void *aContext, uint8_t aArgsLength, char *aAr
                     payload[2] = MFG_CMD_ACTION_SET;
                     payload[4] = (uint8_t)atoi(aArgs[1]);
                     payload[5] = (uint8_t)atoi(aArgs[2]);
-                    otPlatRadioMfgCommand(aContext, SPINEL_CMD_VENDOR_NXP_MFG, (uint8_t *)payload, payloadLen,
-                                          &outputLen);
-                    if ((outputLen >= 4) && (payload[3] == 0))
+                    if ((payload[4] < 2) && (payload[5] < 4))
                     {
-                        error = OT_ERROR_NONE;
-                    }
-                    else
-                    {
-                        error = OT_ERROR_FAILED;
+                        otPlatRadioMfgCommand(aContext, SPINEL_CMD_VENDOR_NXP_MFG, (uint8_t *)payload, payloadLen,
+                                              &outputLen);
+                        if ((outputLen >= 4) && (payload[3] == 0))
+                        {
+                            error = OT_ERROR_NONE;
+                        }
+                        else
+                        {
+                            error = OT_ERROR_FAILED;
+                        }
                     }
                 }
             }
@@ -508,7 +512,7 @@ static otError ProcessMfgCommands(void *aContext, uint8_t aArgsLength, char *aAr
                 break;
 
             case MFG_CMD_CONTINOUS_ED_TEST:
-                error = ProcessMfgSetInt8(aContext, MFG_CMD_CONTINOUS_ED_TEST, aArgsLength, aArgs, -127, 127);
+                error = ProcessMfgSetInt8(aContext, MFG_CMD_CONTINOUS_ED_TEST, aArgsLength, aArgs, 0, 1);
                 break;
 
             case MFG_CMD_GET_ED_VALUE:
@@ -537,14 +541,6 @@ static otError ProcessMfgCommands(void *aContext, uint8_t aArgsLength, char *aAr
                         {
                             error = OT_ERROR_NONE;
                         }
-                        else
-                        {
-                            error = OT_ERROR_FAILED;
-                        }
-                    }
-                    else
-                    {
-                        error = OT_ERROR_FAILED;
                     }
                 }
             }
