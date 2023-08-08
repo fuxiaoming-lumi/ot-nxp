@@ -47,6 +47,7 @@ elseif (${SDK_TYPE} STREQUAL "PACKAGE")
     set(DRIVER_RTC_FILES_PATH ${DRIVER_FILES_PATH})
     set(DEBUG_CONSOLE_FILES_PATH ${NXP_SDK_ROOT}/devices/RW612/utilities/debug_console)
     set(STR_FILES_PATH ${NXP_SDK_ROOT}/devices/RW612/utilities/str)
+    set(FORMAT_FILES_PATH ${NXP_SDK_ROOT}/devices/RW612/utilities/format)
 elseif (${SDK_TYPE} STREQUAL "INTERNAL")
     set(DRIVER_CACHE_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/cache/cache64)
     set(DRIVER_FLEXCOMM_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/flexcomm)
@@ -62,6 +63,7 @@ elseif (${SDK_TYPE} STREQUAL "INTERNAL")
     set(DRIVER_DEVICE_FILES_PATH ${NXP_SDK_ROOT}/devices/RW612/drivers)
     set(DEBUG_CONSOLE_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/debug_console)
     set(STR_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/str)
+    set(FORMAT_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/misc_utilities)
 else()
     message(FATAL_ERROR "Unknown SDK_TYPE")
 endif ()
@@ -72,6 +74,7 @@ set(RW612_SDK_SOURCES
     ${NXP_SDK_ROOT}/devices/RW612/system_RW612.c
 #other SDK files
     ${DRIVER_COMMON_FILES_PATH}/fsl_common.c
+    ${DRIVER_COMMON_FILES_PATH}/fsl_common_arm.c
     ${DRIVER_DEVICE_FILES_PATH}/fsl_clock.c
     ${DRIVER_DEVICE_FILES_PATH}/fsl_power.c
     ${DRIVER_DEVICE_FILES_PATH}/fsl_reset.c
@@ -87,6 +90,7 @@ set(RW612_SDK_SOURCES
     ${DRIVER_RTC_FILES_PATH}/fsl_rtc.c
     ${DEBUG_CONSOLE_FILES_PATH}/fsl_debug_console.c
     ${STR_FILES_PATH}/fsl_str.c
+    ${FORMAT_FILES_PATH}/fsl_format.c
 #SDK components
     ${NXP_SDK_ROOT}/components/serial_manager/fsl_component_serial_manager.c
     ${NXP_SDK_ROOT}/components/serial_manager/fsl_component_serial_port_uart.c
@@ -109,18 +113,6 @@ set(RW612_SDK_SOURCES
     ${NXP_SDK_ROOT}/components/conn_fwloader/life_cycle.c
     ${NXP_SDK_ROOT}/components/conn_fwloader/nboot_hal.c
 )
-
-if (SDK_RELEASE)
-    list(APPEND RW612_SDK_SOURCES
-        ${NXP_SDK_ROOT}/devices/RW612/utilities/format/fsl_format.c
-        ${NXP_SDK_ROOT}/devices/RW612/drivers/fsl_common_arm.c
-)
-else()
-    list(APPEND RW612_SDK_SOURCES
-        ${NXP_SDK_ROOT}/platform/utilities/misc_utilities/fsl_format.c
-        ${NXP_SDK_ROOT}/platform/drivers/common/fsl_common_arm.c
-)
-endif()
 
 if(OT_NXP_MBEDTLS_PORT)
     set(ELS_PKC_CL_PATH ${NXP_SDK_ROOT}/components/els_pkc)
@@ -326,8 +318,7 @@ set(RW612_SDK_INCLUDES
         ${DRIVER_TRNG_FILES_PATH}
         ${DRIVER_RTC_FILES_PATH}
         ${STR_FILES_PATH}
-        ${NXP_SDK_ROOT}/platform/utilities/misc_utilities
-        ${NXP_SDK_ROOT}/platform/drivers/common
+        ${FORMAT_FILES_PATH}
 #SDK components
         ${NXP_SDK_ROOT}/components/uart
         ${NXP_SDK_ROOT}/components/serial_manager
@@ -409,16 +400,6 @@ if(OT_NXP_BUILD_APP_AS_LIB)
     list(APPEND RW612_SDK_INCLUDES
         $ENV{NXP_RW612_SDK_ROOT}/middleware/wireless/ethermind/examples/coex_app_cli/mbedtls
     )
-endif()
-
-if (SDK_RELEASE)
-    list(APPEND RW612_SDK_INCLUDES
-        ${NXP_SDK_ROOT}/devices/RW612/utilities/format
-)
-else()
-    list(APPEND RW612_SDK_INCLUDES
-        ${NXP_SDK_ROOT}/platform/utilities/misc_utilities
-)
 endif()
 
 #freertos
