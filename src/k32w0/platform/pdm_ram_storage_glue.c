@@ -67,7 +67,7 @@
 #define PDM_SAVE_IDLE_PAGE_SIZE FLASH_PAGE_SIZE
 #else
 #include "Eeprom.h"
-#define PDM_SAVE_IDLE_PAGE_SIZE gEepromParams_SectorSize_c
+#define PDM_SAVE_IDLE_PAGE_SIZE 2048
 #endif // PDM_EXT_FLASH
 
 /* Segment data size is: PDM page size - size of internal header (D_PDM_NVM_SEGMENT_HEADER_SIZE).
