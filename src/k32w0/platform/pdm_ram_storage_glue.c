@@ -508,7 +508,10 @@ static void FS_SaveRecordData(tsQueueEntry *entry)
     {
         PDM_teStatus status = PDM_E_STATUS_INTERNAL_ERROR;
         uint16_t     size   = (length < PDM_SEGMENT_SIZE) ? length : PDM_SEGMENT_SIZE;
-
+        if (size == 0)
+        {
+            break;
+        }
         // There might be a corner case in which correlated keys are in different
         // PDM regions, which might cause deprecated fabric data if an issue occurs
         // (reset) before both PDM regions are saved, with the assumption that fabric
