@@ -88,7 +88,7 @@ static uint8_t      u8QueueReadPtr;
 static osaMutexId_t asQueueMutex;
 static bool_t       asQueueMutexTaken;
 /* Buffer used to temporary copy RAM buffer data in order to sync save it. */
-static uint8_t sSegmentBuffer[PDM_SEGMENT_SIZE];
+static uint8_t *sSegmentBuffer = NULL;
 
 static uint8_t u8IncrementQueuePtr(uint8_t u8CurrentValue);
 
@@ -219,6 +219,23 @@ static void loadData(uint16_t id, uint16_t nbIds, ramBufferDescriptor *handle)
     }
 }
 
+bool_t PDM_RetrieveSegmentSize()
+{
+    if (sPdmSegmentSize > PDM_SEGMENT_MARGIN)
+    {
+        return TRUE;
+    }
+
+    sPdmSegmentSize = PDM_GetSegmentBufferSize();
+    if (sPdmSegmentSize <= PDM_SEGMENT_MARGIN)
+    {
+        sPdmSegmentSize = 0;
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 #if ENABLE_STORAGE_DYNAMIC_MEMORY
 
 static void HandleError(ramBufferDescriptor **buffer)
@@ -270,6 +287,8 @@ ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize, bool_t e
     rsError              err      = RS_ERROR_NONE;
     ramBufferDescriptor *ramDescr = NULL;
     uint16_t             nbPdmIds = 0;
+
+    otEXPECT_ACTION((TRUE == PDM_RetrieveSegmentSize()), ramDescr = NULL);
 
     ramDescr = (ramBufferDescriptor *)otPlatCAlloc(1, kRamDescSize);
     otEXPECT_ACTION(ramDescr != NULL, HandleError(&ramDescr));
@@ -395,8 +414,12 @@ rsError ramStorageEnsureBlockConsistency(ramBufferDescriptor *pBuffer, uint16_t 
         // This means the current block will span across two PDM id regions, which can
         // lead to corrupted data in some corner cases. Add a dummy value and shift the
         // current block such that it falls in the next PDM id region.
-        const uint16_t dummyLength =
+        uint16_t dummyLength =
             PDM_SEGMENT_SIZE - ((pBuffer->header.length % PDM_SEGMENT_SIZE) + sizeof(struct settingsBlock));
+        if (dummyLength >= PDM_SEGMENT_SIZE)
+        {
+            dummyLength = 0;
+        }
         struct settingsBlock dummyBlock = {.key = kRamBufferDummyKey, .length = dummyLength};
 
         memcpy(&pBuffer->buffer[pBuffer->header.length], &dummyBlock, sizeof(dummyBlock));
@@ -420,6 +443,26 @@ uint8_t u8IncrementQueuePtr(uint8_t u8CurrentValue)
     }
 
     return u8IncrementedPtr;
+}
+
+bool_t FS_Init()
+{
+    if (!sPdmSegmentSize)
+    {
+        return FALSE;
+    }
+
+    sSegmentBuffer = (uint8_t *)malloc(PDM_SEGMENT_SIZE);
+    return sSegmentBuffer != NULL;
+}
+
+void FS_Deinit()
+{
+    if (sSegmentBuffer)
+    {
+        free(sSegmentBuffer);
+        sSegmentBuffer = NULL;
+    }
 }
 
 PDM_teStatus FS_eSaveRecordDataInIdleTask(uint16_t u16IdValue, ramBufferDescriptor *pvDataBuffer)
@@ -502,7 +545,7 @@ static void FS_SaveRecordData(tsQueueEntry *entry)
 {
     ramBufferDescriptor *handle   = entry->pvDataBuffer;
     uint16_t             length   = handle->header.length;
-    uint8_t              segments = (length / PDM_SEGMENT_SIZE) + 1;
+    uint8_t              segments = (length + PDM_SEGMENT_SIZE - 1) / PDM_SEGMENT_SIZE;
 
     for (uint8_t i = 0; i < segments; i++)
     {
