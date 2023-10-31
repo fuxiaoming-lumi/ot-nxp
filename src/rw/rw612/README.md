@@ -52,7 +52,7 @@ Download [the latest SDK from the link.](https://mcuxpresso.nxp.com/). Creating 
 Click on "Build MCUXpresso SDK" button. On the next page select the desired Host OS and ALL for Toolchain/IDE. Additionaly `SELECT ALL` components and then press `DOWNLOAD SDK` button.
 Once the SDK zip archive is downloaded, unzip it, and access the contents.
 
-> **_NOTE:_** When using the SDK version 2.13.1 in order to build the OpenThread RW612 configurations the 2 additional files `fwk_lfs_config.h` and `fwk_lfs_config.c` must be downloaded from [SDK_2_13_1_RW61X_OT_LFS_Config](https://mcuxpresso.nxp.com/en/dashboard?download=60c36b53bf8c1ba245bc757a1a69cdbc) and copied to SDK location `.../middleware/wireless/framework/platform/rw61x/configs/` .
+> **_NOTE:_** When using the SDK version 2.13.2 to build and run the OpenThread RW612 OTBR examples the LWIP component must be downloaded from the [LWIP NXP GitHub](https://github.com/nxp-mcuxpresso/lwip/tree/mcux_release_2.13.3_rw610_rfp2). Take the latest commit from the indicated branch and copy to SDK location `.../middleware/lwip` . The lwip folder in `.../middleware/` must be completely overwritten by the contents downloaded from GitHub.
 
 ![Board Selection](../../../doc/img/rw612/sdk-build.jpg)
 
@@ -86,6 +86,13 @@ After a successful build, the `elf` and `binary` files are found in `build_rw612
 
 - ot-cli-rw612 (the elf image)
 - ot-cli-rw612.bin (the binary)
+
+- ot-br-rw612 (the elf image)
+- ot-br-rw612.bin (the binary)
+
+For border router features see dedicated [README][otbr-readme-page] file.
+
+[otbr-readme-page]:../../../examples/br/README-OTBR.md
 
 ## Flash Binaries
 
@@ -135,10 +142,41 @@ J-Link> loadbin path/to/binary,0x08000000
    - No parity
    - No flow control
 
-3. Open a terminal connection on the first board and start a new Thread network.
+3. Open a terminal connection on the first board and start a new Thread network. 
+
+   Note that setting channel, panid, and network key is not enough anymore because of an Open Thread stack update.
+
+   We first need to initialize a new dataset. Using `dataset` command we visualize the newly generated dataset.
 
 ```bash
-> panid 0xabcd
+> dataset init new
+Done
+> dataset
+Active Timestamp: 1
+Channel: 25
+Channel Mask: 0x07fff800
+Ext PAN ID: 42af793f623aab54
+Mesh Local Prefix: fd6e:c358:7078:5a8d::/64
+Network Key: f824658f79d8ca033fbb85ecc3ca91cc
+Network Name: OpenThread-b870
+PAN ID: 0xb870
+PSKc: f438a194a5e968cc43cc4b3a6f560ca4
+Security Policy: 672 onrc 0
+Done
+>
+```
+To change network parameters use:
+
+```bash
+> dataset panid 0xabcd
+Done
+> dataset channel 25
+Done
+```
+Then commit the new dataset:
+
+```bash
+> dataset commit active
 Done
 > ifconfig up
 Done
@@ -151,12 +189,16 @@ Done
 ```bash
 > state
 Leader
+> dataset active -x
+0e08000000000001000035060004001fffe0020842af793f623aab540708fd6ec35870785a8d0510f824658f79d8ca033fbb85ecc3ca91cc030f4f70656e5468726561642d623837300102b8700410f438a194a5e968cc43cc4b3a6f560ca40c0402a0f7f8000300000b
+Done
+>
 ```
 
 5. Open a terminal connection on the second board and attach a node to the network.
 
 ```bash
-> panid 0xabcd
+> dataset set active 0e08000000000001000035060004001fffe0020842af793f623aab540708fd6ec35870785a8d0510f824658f79d8ca033fbb85ecc3ca91cc030f4f70656e5468726561642d623837300102b8700410f438a194a5e968cc43cc4b3a6f560ca40c0402a0f7f8000300000b
 Done
 > ifconfig up
 Done
