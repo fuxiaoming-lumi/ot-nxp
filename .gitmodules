@@ -1,3 +1,3 @@
 [submodule "openthread"]
 	path = openthread
-	url = ../openthread.git
+	url = https://github.com/fuxiaoming-lumi/openthread.git
